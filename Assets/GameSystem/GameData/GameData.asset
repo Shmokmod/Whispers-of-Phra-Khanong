@@ -1,0 +1,85 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87833e03a6ff61341a7cf771896e65d7, type: 3}
+  m_Name: GameData
+  m_EditorClassIdentifier: Assembly-CSharp::GameSystem.GameData
+  statements:
+  - id: 0001
+    speakerName: EWeiii
+    text: hahahaha
+    portrait: {fileID: 210273691, guid: 64b2e1716dde72d4c944724856b020a5, type: 3}
+    isVerified: 0
+    isContradicted: 0
+    isUnlocked: 1
+  - id: 0002
+    speakerName: Eaaa
+    text: hahahaha
+    portrait: {fileID: 403319448, guid: fe52090ef1583bc47aa4230ba5d5db28, type: 3}
+    isVerified: 0
+    isContradicted: 0
+    isUnlocked: 1
+  - id: 0003
+    speakerName: Eaooo
+    text: hahahaha
+    portrait: {fileID: -1367759408, guid: 7c934c9f1c5f3464a98caf94d65ed72a, type: 3}
+    isVerified: 0
+    isContradicted: 0
+    isUnlocked: 0
+  - id: 0004
+    speakerName: EEEEEEEEEE
+    text: hahahaha
+    portrait: {fileID: 144000271, guid: 7c934c9f1c5f3464a98caf94d65ed72a, type: 3}
+    isVerified: 0
+    isContradicted: 0
+    isUnlocked: 0
+  evidences:
+  - id: 0001
+    itemName: EWaaa
+    description: hehehhe
+    type: 1
+    icon: {fileID: 10901, guid: 0000000000000000f000000000000000, type: 0}
+    locationFound: asd
+    isUsed: 0
+    isUnlocked: 0
+  - id: 0002
+    itemName: EVAAAA
+    description: hehehhe
+    type: 1
+    icon: {fileID: 10901, guid: 0000000000000000f000000000000000, type: 0}
+    locationFound: asd
+    isUsed: 0
+    isUnlocked: 0
+  - id: 0003
+    itemName: EHAAAA
+    description: hehehhe
+    type: 1
+    icon: {fileID: 10901, guid: 0000000000000000f000000000000000, type: 0}
+    locationFound: asd
+    isUsed: 0
+    isUnlocked: 0
+  - id: 0004
+    itemName: HAAAA
+    description: hehehhe
+    type: 1
+    icon: {fileID: 10901, guid: 0000000000000000f000000000000000, type: 0}
+    locationFound: asd
+    isUsed: 0
+    isUnlocked: 0
+  contradictions:
+  - itemA_ID: 0001
+    itemB_ID: 0002
+    type: 0
+    resultTitle: No No Your Gay
+    resultMessage: hehe gay
+    unlockedStatements:
+    - 0003
+    unlockedEvidences: []
