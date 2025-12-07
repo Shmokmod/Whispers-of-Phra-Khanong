@@ -330,6 +330,11 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 1158449799279172816, guid: a14f122e7f98519458bb0e135d3c2c11, type: 3}
   m_PrefabInstance: {fileID: 85366060}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &85366062 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1617048316746748208, guid: a14f122e7f98519458bb0e135d3c2c11, type: 3}
+  m_PrefabInstance: {fileID: 85366060}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &85366063 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 452899438438950066, guid: a14f122e7f98519458bb0e135d3c2c11, type: 3}
@@ -1228,7 +1233,7 @@ GameObject:
   - component: {fileID: 655895147}
   - component: {fileID: 655895150}
   m_Layer: 0
-  m_Name: WarpZone
+  m_Name: Cylinder (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1243,11 +1248,11 @@ Transform:
   m_GameObject: {fileID: 655895145}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 25.892422, y: 0.92879605, z: -43.155228}
-  m_LocalScale: {x: 5.187397, y: 1.1644095, z: 5.187397}
+  m_LocalPosition: {x: -93.14, y: 0.52, z: 40.1}
+  m_LocalScale: {x: 8.204012, y: 1.8415459, z: 8.204012}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1547637445}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!136 &655895147
 CapsuleCollider:
@@ -1342,6 +1347,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SceneTrigger
   sceneToLoad: Level1-Vault
   targetSpawnPointName: SpawnPoint_FromMainLevel1
+  interactKey: 101
+  interactionIcon: {fileID: 85366062}
 --- !u!1 &698461405
 GameObject:
   m_ObjectHideFlags: 0
@@ -1751,52 +1758,6 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 1969476169269212006, guid: c31fead7cf2e52d489d5d9dcb9b448ad, type: 3}
---- !u!1 &966830013
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 966830015}
-  - component: {fileID: 966830014}
-  m_Layer: 0
-  m_Name: '#GameData'
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &966830014
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 966830013}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3091041f815482d4eafe228b6da191af, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GameSystem.GameDataRuntime
-  data: {fileID: 11400000, guid: a5df1a8b79c65ba4f9aa0a57cf804794, type: 2}
-  defaultData: {fileID: 0}
---- !u!4 &966830015
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 966830013}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 27.52682, y: 0, z: -64.64407}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1038805456
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1942,8 +1903,7 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1471736008}
     m_RemovedComponents: []
-    m_RemovedGameObjects:
-    - {fileID: 6205296133384227820, guid: ba87ffecf8dc3b74280fe4e11a58174f, type: 3}
+    m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: ba87ffecf8dc3b74280fe4e11a58174f, type: 3}
@@ -1998,9 +1958,9 @@ Transform:
   m_GameObject: {fileID: 1169159486}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 25.63, y: 1.48, z: -43.92}
-  m_LocalScale: {x: 5.187397, y: 1.1644095, z: 5.187397}
-  m_ConstrainProportionsScale: 0
+  m_LocalPosition: {x: 25.892422, y: 0.92879605, z: -43.155228}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -2668,10 +2628,6 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: f917b4e5ce028b240ba2bcafbf73bd78, type: 2}
-    - target: {fileID: -1538112130698044685, guid: c31fead7cf2e52d489d5d9dcb9b448ad, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: -1
-      objectReference: {fileID: 0}
     - target: {fileID: -1461304994638716399, guid: c31fead7cf2e52d489d5d9dcb9b448ad, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
@@ -2821,6 +2777,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: c31fead7cf2e52d489d5d9dcb9b448ad, type: 3}
       insertIndex: 70
       addedObject: {fileID: 698461406}
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: c31fead7cf2e52d489d5d9dcb9b448ad, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 655895146}
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: c31fead7cf2e52d489d5d9dcb9b448ad, type: 3}
       insertIndex: -1
       addedObject: {fileID: 624771699}
@@ -4289,15 +4248,13 @@ BoxCollider:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
+  - {fileID: 85366060}
   - {fileID: 28616417}
-  - {fileID: 966830015}
   - {fileID: 1038805456}
   - {fileID: 1471736002}
-  - {fileID: 85366060}
   - {fileID: 563871869}
   - {fileID: 1652368719}
   - {fileID: 1994025367}
   - {fileID: 1902340204}
   - {fileID: 1169159487}
-  - {fileID: 655895146}
   - {fileID: 1547637444}

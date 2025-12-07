@@ -1,69 +1,49 @@
 ﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class SceneTrigger : MonoBehaviour
+public class SceneTrigger : MonoBehaviour, IInteractable
 {
     [Header("Scene Settings")]
+    [Tooltip("ชื่อ Scene ที่ต้องโหลด")]
     public string sceneToLoad = "NextScene";
 
     [Header("Spawn Point Settings")]
-    [Tooltip("ชื่อของ Spawn Point ที่จะไปหาใน Scene ปลายทาง")]
-    public string targetSpawnPointName = "SpawnPoint_FromA";    
+    [Tooltip("ชื่อ Spawn Point ใน Scene ปลายทาง")]
+    public string targetSpawnPointName = "SpawnPoint_FromA";
 
-    [Header("Interaction Settings")]
-    public KeyCode interactKey = KeyCode.E;
-    public GameObject interactionIcon;
-
-    private bool isPlayerInside = false;
-
-    void Start()
+    // ----------------------------------------------------------
+    // IInteractable Implementation
+    // ----------------------------------------------------------
+    public bool CanInteract()
     {
-        if (interactionIcon != null)
-        {
-            interactionIcon.SetActive(false);
-        }
+        // ประตูวาป interact ได้เสมอ
+        return true;
     }
 
-    void Update()
+    public void Interact()
     {
-        if (isPlayerInside && Input.GetKeyDown(interactKey))
-        {
-            LoadScene();
-        }
-    }
+        Debug.Log($"[SceneTrigger] Interact -> Loading Scene: {sceneToLoad}, Spawn: {targetSpawnPointName}");
 
-    private void OnTriggerEnter(Collider other)
-    {
-        if (other.CompareTag("Player"))
-        {
-            isPlayerInside = true;
-
-            if (interactionIcon != null)
-            {
-                interactionIcon.SetActive(true);
-            }
-        }
-    }
-
-    private void OnTriggerExit(Collider other)
-    {
-        if (other.CompareTag("Player"))
-        {
-            isPlayerInside = false;
-
-            if (interactionIcon != null)
-            {
-                interactionIcon.SetActive(false);
-            }
-        }
-    }
-
-    void LoadScene()
-    {
-        // บันทึกชื่อ spawn point ที่ต้องการไป
+        // ส่งชื่อ spawn point ให้ Scene ปลายทาง
         SpawnManager.targetSpawnPointName = targetSpawnPointName;
 
-        // โหลด Scene
-        SceneManager.LoadScene(sceneToLoad);
+        // ถ้ามีระบบ Fade / LoadingScreen
+        if (LoadingScreen.Instance != null)
+        {
+            StartCoroutine(LoadingScreen.Instance.FadeTransition(() =>
+            {
+                SceneManager.LoadScene(sceneToLoad);
+            }, 1f)); // delay หลังโหลดเสร็จ 1 วินาที
+        }
+        else
+        {
+            // ไม่มี LoadingScreen -> โหลดตรงๆ
+            SceneManager.LoadScene(sceneToLoad);
+        }
     }
+
+    // ----------------------------------------------------------
+    // ตัวนี้ไม่มี OnTriggerEnter/Exit เพราะ PlayerDetector จะจัดการเอง
+    // ประตูวาปแค่ต้องมี Collider + isTrigger = true
+    // ----------------------------------------------------------
 }
