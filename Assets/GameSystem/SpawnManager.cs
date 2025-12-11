@@ -1,6 +1,9 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using System.Diagnostics;
+using UnityEngine;
 using UnityEngine.SceneManagement;
-using System.Collections;
+using static TMPro.SpriteAssetUtilities.TexturePacker_JsonArray;
+using Debug = UnityEngine.Debug;
 
 public class SpawnManager : MonoBehaviour
 {
@@ -9,12 +12,19 @@ public class SpawnManager : MonoBehaviour
     // เก็บชื่อ spawn point ที่ต้องการไปหา
     public static string targetSpawnPointName = "";
 
+    [Header("Settings")]
+    [SerializeField] private int waitFrames = 5; // จำนวนเฟรมที่รอก่อน spawn
+    [SerializeField] private bool debugMode = true;
+    [SerializeField] private bool lockYRotation = true; // ล็อค Y rotation สำหรับ 2.5D
+    [SerializeField] private float spawnHeight = 0f; // ความสูงเริ่มต้นถ้าต้องการปรับ
+
     void Awake()
     {
         if (Instance == null)
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
+            DebugLog("✅ SpawnManager initialized (2.5D Mode)");
         }
         else
         {
@@ -34,28 +44,29 @@ public class SpawnManager : MonoBehaviour
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        Debug.Log($"Scene โหลดเสร็จ: {scene.name}, Target Spawn: '{targetSpawnPointName}'");
+        DebugLog($"📍 Scene loaded: {scene.name}, Target Spawn: '{targetSpawnPointName}'");
 
         if (!string.IsNullOrEmpty(targetSpawnPointName))
         {
-            // เรียก coroutine ที่รอหลายเฟรมเพื่อหลีกเลี่ยง race condition กับการ Destroy/Instantiate ของ Player
+            // เรียก coroutine ที่รอหลายเฟรมเพื่อหลีกเลี่ยง race condition
             StartCoroutine(SpawnPlayerNextFrame(targetSpawnPointName));
             targetSpawnPointName = ""; // รีเซ็ตหลังใช้งาน
         }
         else
         {
-            Debug.Log("ไม่มี Target Spawn Point - ใช้ตำแหน่งปกติ");
+            DebugLog("ℹ️ No target spawn point - using default position");
         }
     }
 
     IEnumerator SpawnPlayerNextFrame(string spawnPointName)
     {
-        // รอหลายเฟรมให้แน่ใจว่า Player ตัวซ้ำถูก Destroy เสร็จ (ลด MissingReference / race)
-        // (ปรับจำนวนเฟรมตามความจำเป็น; 3-5 เฟรมมักพอ)
-        for (int i = 0; i < 5; i++)
+        // รอหลายเฟรมให้แน่ใจว่า Player ตัวซ้ำถูก Destroy เสร็จ
+        for (int i = 0; i < waitFrames; i++)
+        {
+            DebugLog($"⏳ Waiting frame {i + 1}/{waitFrames}...");
             yield return null;
+        }
 
-        // ใช้รอเสร็จอีกนิดก่อนเรียกจริง
         yield return new WaitForEndOfFrame();
 
         SpawnPlayerAtPoint(spawnPointName);
@@ -63,179 +74,349 @@ public class SpawnManager : MonoBehaviour
 
     void SpawnPlayerAtPoint(string spawnPointName)
     {
-        Debug.Log($"กำลังหา Spawn Point: '{spawnPointName}'");
+        DebugLog($"🔍 Looking for Spawn Point: '{spawnPointName}'");
 
         // หา spawn point ที่ต้องการ
         GameObject spawnPoint = GameObject.Find(spawnPointName);
 
-        if (spawnPoint != null)
+        if (spawnPoint == null)
         {
-            Debug.Log($"เจอ Spawn Point ที่: {spawnPoint.transform.position}");
+            Debug.LogError($"❌ Spawn Point '{spawnPointName}' not found!");
+            ListAvailableSpawnPoints();
+            return;
+        }
 
-            // หา Player ทั้งหมด
-            GameObject[] allPlayers = GameObject.FindGameObjectsWithTag("Player");
-            Debug.Log($"========== ตรวจสอบ Player ==========");
-            Debug.Log($"เจอ Player ทั้งหมด: {allPlayers.Length} ตัว");
+        DebugLog($"✅ Found Spawn Point at: {spawnPoint.transform.position}");
 
-            for (int i = 0; i < allPlayers.Length; i++)
+        // หา Player
+        GameObject player = FindBestPlayer();
+
+        if (player == null)
+        {
+            Debug.LogError("❌ No Player found in scene!");
+            return;
+        }
+
+        // ย้าย Player
+        MovePlayerToSpawn(player, spawnPoint.transform);
+
+        // อัปเดต Camera
+        UpdateCinemachineTarget(player.transform);
+    }
+
+    GameObject FindBestPlayer()
+    {
+        GameObject[] allPlayers = GameObject.FindGameObjectsWithTag("Player");
+
+        DebugLog($"========== Player Detection ==========");
+        DebugLog($"Found {allPlayers.Length} Player(s)");
+
+        for (int i = 0; i < allPlayers.Length; i++)
+        {
+            DebugLog($"  Player {i + 1}:");
+            DebugLog($"    - Name: {allPlayers[i].name}");
+            DebugLog($"    - Position: {allPlayers[i].transform.position}");
+            DebugLog($"    - Scene: {allPlayers[i].scene.name}");
+            DebugLog($"    - Active: {allPlayers[i].activeInHierarchy}");
+        }
+        DebugLog($"====================================");
+
+        if (allPlayers.Length == 0)
+        {
+            Debug.LogError("❌ No Player with 'Player' tag found!");
+            return null;
+        }
+
+        // ลำดับความสำคัญในการเลือก Player:
+        // 1. Player ใน DontDestroyOnLoad (persistent player)
+        // 2. Player ที่ active
+        // 3. Player ตัวแรก
+
+        GameObject bestPlayer = null;
+
+        // หา DontDestroyOnLoad player ก่อน
+        foreach (var p in allPlayers)
+        {
+            if (p.scene.name == "DontDestroyOnLoad")
             {
-                Debug.Log($"  Player ตัวที่ {i + 1}:");
-                Debug.Log($"    - ชื่อ: {allPlayers[i].name}");
-                Debug.Log($"    - ตำแหน่ง: {allPlayers[i].transform.position}");
-                Debug.Log($"    - Scene: {allPlayers[i].scene.name}");
-                Debug.Log($"    - Instance ID: {allPlayers[i].GetInstanceID()}");
+                bestPlayer = p;
+                DebugLog($"✅ Selected persistent Player: {p.name}");
+                break;
             }
-            Debug.Log($"====================================");
+        }
 
-            if (allPlayers.Length > 0)
+        // ถ้าไม่มี ให้เลือก active player
+        if (bestPlayer == null)
+        {
+            foreach (var p in allPlayers)
             {
-                // เลือก player แบบ robust:
-                // - ถ้ามี player ที่ scene.name == "DontDestroyOnLoad" ให้ใช้ตัวนั้น (persistent)
-                // - ถ้าไม่มี ให้ใช้ GameObject.FindGameObjectWithTag("Player") เป็น fallback
-                GameObject player = null;
-                foreach (var p in allPlayers)
+                if (p.activeInHierarchy)
                 {
-                    if (p.scene.name == "DontDestroyOnLoad")
-                    {
-                        player = p;
-                        break;
-                    }
+                    bestPlayer = p;
+                    DebugLog($"✅ Selected active Player: {p.name}");
+                    break;
                 }
-
-                if (player == null)
-                {
-                    // fallback: ใช้ตัวแรกที่ active
-                    for (int i = 0; i < allPlayers.Length; i++)
-                    {
-                        if (allPlayers[i].activeInHierarchy)
-                        {
-                            player = allPlayers[i];
-                            break;
-                        }
-                    }
-                }
-
-                if (player == null)
-                {
-                    player = GameObject.FindGameObjectWithTag("Player"); // สุดท้าย fallback
-                }
-
-                if (player == null)
-                {
-                    Debug.LogError("✗ ไม่พบ Player ที่สามารถใช้ได้ (หลังการเลือก)");
-                    return;
-                }
-
-                Vector3 oldPos = player.transform.position;
-                Debug.Log($"เลือกใช้ Player: {player.name} ที่ตำแหน่งเก่า: {oldPos}");
-
-                // ปิด PlayerMovement ชั่วคราว
-                MonoBehaviour playerMovement = player.GetComponent("PlayerMovement") as MonoBehaviour;
-                if (playerMovement != null)
-                {
-                    playerMovement.enabled = false;
-                    Debug.Log("ปิด PlayerMovement ชั่วคราว");
-                }
-
-                // ปิด Character Controller ก่อนเคลื่อนย้าย (ถ้ามี)
-                CharacterController controller = player.GetComponent<CharacterController>();
-                if (controller != null)
-                {
-                    controller.enabled = false;
-                }
-
-                // Reset Rigidbody (ถ้ามี)
-                Rigidbody rb = player.GetComponent<Rigidbody>();
-                if (rb != null)
-                {
-                    // ปิด interpolation ชั่วคราว และหยุด velocity
-                    rb.interpolation = RigidbodyInterpolation.None;
-                    rb.linearVelocity = Vector3.zero;
-                    rb.angularVelocity = Vector3.zero;
-                    rb.Sleep();
-                    Debug.Log("รีเซ็ต Rigidbody velocity + Sleep + ปิด Interpolation");
-                }
-
-                // เคลื่อนย้าย Player
-                player.transform.position = spawnPoint.transform.position;
-                player.transform.rotation = spawnPoint.transform.rotation;
-
-                // บังคับ Physics sync และ wake up rigidbody
-                Physics.SyncTransforms();
-
-                if (rb != null)
-                {
-                    rb.WakeUp();
-                    rb.linearVelocity = Vector3.zero;
-                    rb.angularVelocity = Vector3.zero;
-                }
-
-                Debug.Log($">>> หลังย้าย transform.position = {player.transform.position}");
-
-                if (controller != null)
-                {
-                    controller.enabled = true;
-                }
-
-                // เปิด PlayerMovement อีกครั้ง
-                if (playerMovement != null)
-                {
-                    playerMovement.enabled = true;
-                    Debug.Log("เปิด PlayerMovement อีกครั้ง");
-                }
-
-                // อัปเดต Cinemachine Camera
-                UpdateCinemachineTarget(player.transform);
-
-                Vector3 newPos = player.transform.position;
-                Debug.Log($"✓ Player ถูกย้ายไปที่: {spawnPointName}");
-                Debug.Log($"  ตำแหน่งเก่า: {oldPos}");
-                Debug.Log($"  ตำแหน่งใหม่: {newPos}");
-                Debug.Log($"  ระยะห่าง: {Vector3.Distance(oldPos, newPos)} units");
-
-                // เปิด Player อีกครั้ง
-                player.SetActive(true);
-                Debug.Log("เปิด Player แล้ว");
-
-                Debug.Log($">>> ตำแหน่งสุดท้ายหลังเปิด Player: {player.transform.position}");
             }
-            else
-            {
-                Debug.LogError("✗ ไม่พบ Player ใน Scene! ตรวจสอบว่า Player มี Tag 'Player' หรือไม่");
-            }
+        }
+
+        // ถ้ายังไม่มี ใช้ตัวแรก
+        if (bestPlayer == null && allPlayers.Length > 0)
+        {
+            bestPlayer = allPlayers[0];
+            DebugLog($"✅ Selected first Player: {bestPlayer.name}");
+        }
+
+        return bestPlayer;
+    }
+
+    void MovePlayerToSpawn(GameObject player, Transform spawnTransform)
+    {
+        Vector3 oldPos = player.transform.position;
+        DebugLog($"📦 Moving Player from {oldPos} to {spawnTransform.position}");
+
+        // ปิด components ชั่วคราว
+        MonoBehaviour playerMovement = player.GetComponent("PlayerMovement") as MonoBehaviour;
+        CharacterController controller = player.GetComponent<CharacterController>();
+        Rigidbody rb = player.GetComponent<Rigidbody>();
+
+        // ปิด Movement Script
+        if (playerMovement != null)
+        {
+            playerMovement.enabled = false;
+            DebugLog("🔒 Disabled PlayerMovement");
+        }
+
+        // ปิด Character Controller
+        if (controller != null)
+        {
+            controller.enabled = false;
+            DebugLog("🔒 Disabled CharacterController");
+        }
+
+        // Reset Rigidbody (สำหรับ 3D/2.5D)
+        if (rb != null)
+        {
+            rb.interpolation = RigidbodyInterpolation.None;
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+            rb.Sleep();
+            DebugLog("🔄 Reset Rigidbody (3D)");
+        }
+
+        // คำนวณตำแหน่งใหม่
+        Vector3 newPosition = spawnTransform.position;
+
+        // ถ้าต้องการปรับความสูง
+        if (spawnHeight != 0f)
+        {
+            newPosition.y += spawnHeight;
+        }
+
+        // ย้าย Player
+        player.transform.position = newPosition;
+
+        // จัดการ Rotation สำหรับ 2.5D
+        if (lockYRotation)
+        {
+            // ล็อค Y rotation แต่รักษา X, Z จาก spawn point
+            Vector3 spawnRotation = spawnTransform.eulerAngles;
+            player.transform.rotation = Quaternion.Euler(spawnRotation.x, 0f, spawnRotation.z);
+            DebugLog($"🔒 Locked Y rotation, using X:{spawnRotation.x}, Z:{spawnRotation.z}");
         }
         else
         {
-            Debug.LogError($"✗ ไม่พบ Spawn Point ชื่อ: '{spawnPointName}' ใน Scene นี้");
-
-            // แสดง GameObject ทั้งหมดที่มีคำว่า "Spawn" ในชื่อ (debug ช่วย)
-            GameObject[] allObjects = FindObjectsByType<GameObject>(FindObjectsSortMode.None);
-            Debug.Log("=== GameObject ที่มีคำว่า Spawn ===");
-            foreach (GameObject obj in allObjects)
-            {
-                if (obj.name.Contains("Spawn"))
-                {
-                    Debug.Log($"  - {obj.name}");
-                }
-            }
+            player.transform.rotation = spawnTransform.rotation;
         }
+
+        DebugLog($"📍 Set position to: {player.transform.position}");
+        DebugLog($"📐 Set rotation to: {player.transform.eulerAngles}");
+
+        // Sync Physics (3D)
+        Physics.SyncTransforms();
+
+        // Wake up Rigidbody
+        if (rb != null)
+        {
+            rb.WakeUp();
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+
+            // ตั้ง Interpolation กลับ
+            rb.interpolation = RigidbodyInterpolation.Interpolate;
+            DebugLog("⚡ Woke up Rigidbody and restored interpolation");
+        }
+
+        // เปิด Character Controller กลับ
+        if (controller != null)
+        {
+            controller.enabled = true;
+            DebugLog("🔓 Enabled CharacterController");
+        }
+
+        // เปิด Movement Script กลับ
+        if (playerMovement != null)
+        {
+            playerMovement.enabled = true;
+            DebugLog("🔓 Enabled PlayerMovement");
+        }
+
+        // Ensure Player is active
+        if (!player.activeInHierarchy)
+        {
+            player.SetActive(true);
+            DebugLog("✅ Activated Player");
+        }
+
+        Vector3 newPos = player.transform.position;
+        float distance = Vector3.Distance(oldPos, newPos);
+
+        DebugLog($"✅ Player moved successfully!");
+        DebugLog($"   Old Position: {oldPos}");
+        DebugLog($"   New Position: {newPos}");
+        DebugLog($"   Distance: {distance:F2} units");
     }
 
     void UpdateCinemachineTarget(Transform playerTransform)
     {
-        // หา Cinemachine Camera ทั้งหมด (Cinemachine 3.x)
+        // Cinemachine 3.x
         var cinemachineCameras = FindObjectsByType<Unity.Cinemachine.CinemachineCamera>(FindObjectsSortMode.None);
 
-        foreach (var cam in cinemachineCameras)
+        if (cinemachineCameras.Length > 0)
         {
-            cam.Follow = playerTransform;
-            cam.LookAt = playerTransform;
-            Debug.Log($"อัปเดต Cinemachine: {cam.name} -> Follow: {playerTransform.name}");
+            foreach (var cam in cinemachineCameras)
+            {
+                cam.Follow = playerTransform;
+                cam.LookAt = playerTransform;
+                DebugLog($"📷 Updated Cinemachine 3.x: {cam.name} -> Follow: {playerTransform.name}");
+            }
         }
-
-        if (cinemachineCameras.Length == 0)
+        else
         {
-            Debug.LogWarning("ไม่พบ Cinemachine Camera ใน Scene");
+            // Fallback: ลองหา Cinemachine 2.x
+#if CINEMACHINE_2
+            var virtualCameras = FindObjectsByType<Cinemachine.CinemachineVirtualCamera>(FindObjectsSortMode.None);
+            
+            if (virtualCameras.Length > 0)
+            {
+                foreach (var cam in virtualCameras)
+                {
+                    cam.Follow = playerTransform;
+                    cam.LookAt = playerTransform;
+                    DebugLog($"📷 Updated Cinemachine 2.x: {cam.name}");
+                }
+            }
+            else
+            {
+                Debug.LogWarning("⚠️ No Cinemachine Camera found in scene");
+            }
+#else
+            Debug.LogWarning("⚠️ No Cinemachine Camera found in scene");
+#endif
         }
     }
+
+    void ListAvailableSpawnPoints()
+    {
+        GameObject[] allObjects = FindObjectsByType<GameObject>(FindObjectsSortMode.None);
+
+        Debug.Log("=== Available Spawn Points ===");
+        int count = 0;
+        foreach (GameObject obj in allObjects)
+        {
+            if (obj.name.Contains("Spawn") || obj.name.Contains("spawn"))
+            {
+                Debug.Log($"  - {obj.name} at {obj.transform.position}");
+                count++;
+            }
+        }
+
+        if (count == 0)
+        {
+            Debug.Log("  (No spawn points found)");
+        }
+        Debug.Log("==============================");
+    }
+
+    void DebugLog(string message)
+    {
+        if (debugMode)
+        {
+            Debug.Log($"[SpawnManager] {message}");
+        }
+    }
+
+    // Optional: Public method to manually spawn player
+    public void SpawnPlayerManually(string spawnPointName)
+    {
+        StartCoroutine(SpawnPlayerNextFrame(spawnPointName));
+    }
 }
+
+//## จุดเปลี่ยนแปลงสำหรับ 2.5D:
+
+//### 1. **ลบ Rigidbody2D และ Physics2D** - ใช้แค่ 3D
+//### 2. **เพิ่ม Lock Y Rotation** - สำหรับเกม 2.5D ที่ไม่ต้องการหมุน Y
+//### 3. **เพิ่ม Spawn Height** - ปรับความสูงได้ถ้าต้องการ
+//### 4. **ปรับ Interpolation** - ตั้งกลับหลังย้ายเสร็จ
+
+//## Setup Spawn Point ใน Unity:
+
+//### วิธีสร้าง Spawn Point ที่ถูกต้อง:
+//```
+//Scene Hierarchy:
+//├── SpawnPoints(Empty GameObject - Parent)
+//│   ├── SpawnPoint_FromA(Empty GameObject)
+//│   ├── SpawnPoint_FromB(Empty GameObject)
+//│   └── SpawnPoint_Default(Empty GameObject)
+//```
+
+//### การตั้งค่า Spawn Point:
+
+//1.สร้าง Empty GameObject
+//2. ตั้งชื่อเช่น `SpawnPoint_FromA`
+//3. ตั้งตำแหน่งที่ต้องการให้ Player spawn
+//4. **Rotation Y = 0** (หรือทิศทางที่ Player ควรหัน)
+
+//### ตัวอย่าง Scene Setup:
+
+//**Level1 (ฉากแรก):**
+//```
+//Scene: Level1
+//├── Player(Tag: Player, มี PlayerPersistence.cs)
+//├── SpawnPoint_Default(0, 0, 0)
+//├── Door_ToLevel2(มี SceneTrigger.cs)
+//│   -sceneToLoad: "Level2"
+//│   -targetSpawnPointName: "SpawnPoint_FromLevel1"
+//```
+
+//**Level2:**
+//```
+//Scene: Level2
+//├── SpawnPoint_FromLevel1(10, 0, 5) < -Player จะ spawn ตรงนี้
+//├── SpawnPoint_FromLevel3 (-5, 0, 8)
+//├── Door_BackToLevel1 (มี SceneTrigger.cs)
+//│   - sceneToLoad: "Level1"
+//│   -targetSpawnPointName: "SpawnPoint_FromLevel2"
+//```
+
+//## Inspector Settings:
+
+//### SpawnManager:
+//-**Wait Frames * *: 5(เพิ่มถ้ามีปัญหา race condition)
+//- **Debug Mode * *: ✅ (เปิดเพื่อดู log)
+//- **Lock Y Rotation**: ✅ (สำหรับ 2.5D)
+//-**Spawn Height * *: 0(ปรับถ้า Player ต้องการความสูงเพิ่ม)
+
+//### SceneTrigger:
+//- **Scene To Load**: `Level2`
+//- **Target Spawn Point Name**: `SpawnPoint_FromLevel1` (ต้องตรงกับชื่อใน Level2!)
+//- **Load Delay**: 1
+//- **Debug Mode * *: ✅
+
+//## Common Issues และวิธีแก้:
+
+//### 1. **Player ไม่ย้าย:**
+//```
+//ตรวจสอบ Console Log:
+//✅ "Found Spawn Point at: ..." < -ถ้าไม่เจอ = ชื่อไม่ตรงกัน
+//✅ "Player moved successfully!" < -ถ้าไม่มี = มีปัญหาใน MovePlayerToSpawn

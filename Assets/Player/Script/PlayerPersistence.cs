@@ -6,29 +6,46 @@ public class PlayerPersistence : MonoBehaviour
 
     void Awake()
     {
-        // ถ้ามี instance เก่าอยู่แล้ว -> ถ้าเป็นตัวเดิมให้เก็บไว้ ถ้าไม่ใช่ให้ทำลายตัวนี้
+        // ถ้ามี instance เก่าอยู่แล้ว
         if (instance == null)
         {
             instance = this;
 
-            // แยก Player ออกจาก Parent (ถ้ามี) เพื่อให้แน่ใจว่าเป็น root GameObject
+            // แยก Player ออกจาก Parent (ถ้ามี)
             if (transform.parent != null)
             {
                 transform.SetParent(null);
             }
 
-            // เรียก DontDestroyOnLoad กับ root object (ปลอดภัยกับ nested cases)
+            // เรียก DontDestroyOnLoad กับ root object
             GameObject root = transform.root.gameObject;
             DontDestroyOnLoad(root);
-            Debug.Log("✓ Player ถูกตั้งค่า DontDestroyOnLoad (root) : " + root.name);
+
+            Debug.Log($"✅ [PlayerPersistence] Player set as DontDestroyOnLoad: {root.name}");
+
+            // ตรวจสอบว่ามี Tag "Player" หรือไม่
+            if (!gameObject.CompareTag("Player"))
+            {
+                Debug.LogWarning("⚠️ [PlayerPersistence] Player GameObject doesn't have 'Player' tag!");
+            }
         }
         else
         {
             if (instance != this)
             {
-                Debug.Log("✗ พบ Player ซ้ำ - ทำลายตัวซ้ำ");
+                Debug.Log($"❌ [PlayerPersistence] Duplicate Player found - destroying: {gameObject.name}");
                 Destroy(gameObject);
             }
+        }
+    }
+
+    void OnDestroy()
+    {
+        // ถ้าเป็น instance หลักที่ถูกทำลาย ให้ clear reference
+        if (instance == this)
+        {
+            instance = null;
+            Debug.Log("[PlayerPersistence] Main instance destroyed");
         }
     }
 }

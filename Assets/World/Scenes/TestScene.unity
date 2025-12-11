@@ -7108,6 +7108,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   interactionIcon: {fileID: 2022823621}
+  detectRadius: 1
 --- !u!1001 &1874512115
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7372,8 +7373,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   sceneToLoad: "\u0E14\u0E48\u0E32\u0E191-\u0E2B\u0E49\u0E2D\u0E07\u0E40\u0E0B\u0E1F"
-  interactKey: 101
-  interactionIcon: {fileID: 2022823621}
+  targetSpawnPointName: SpawnPoint_FromA
+  interactCooldown: 0.5
+  debugMode: 1
 --- !u!1 &2022823621
 GameObject:
   m_ObjectHideFlags: 0
@@ -7453,15 +7455,15 @@ SpriteRenderer:
   m_SortingLayerID: 1877246827
   m_SortingLayer: 2
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: f2cc6c2b381f7274aa601fbbb58f0463, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 403cae6e922330c4c9fb1bfee640ddf1, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 8.203125, y: 6.5625}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 0
+  m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!1001 &2031087964

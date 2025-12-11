@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.SceneManagement;
+using System.Collections;
+using Debug = UnityEngine.Debug;
 
 public class SceneTrigger : MonoBehaviour, IInteractable
 {
@@ -11,39 +13,109 @@ public class SceneTrigger : MonoBehaviour, IInteractable
     [Tooltip("ชื่อ Spawn Point ใน Scene ปลายทาง")]
     public string targetSpawnPointName = "SpawnPoint_FromA";
 
-    // ----------------------------------------------------------
-    // IInteractable Implementation
-    // ----------------------------------------------------------
+    [Header("Optional Settings")]
+    [SerializeField] private float interactCooldown = 0.5f;
+    [SerializeField] private bool debugMode = true;
+
+    private float lastInteractTime = -999f;
+
     public bool CanInteract()
     {
-        // ประตูวาป interact ได้เสมอ
+        // เช็ค cooldown
+        if (Time.time - lastInteractTime < interactCooldown)
+        {
+            DebugLog("⚠️ Interact on cooldown");
+            return false;
+        }
+
+        // ตรวจสอบว่า LoadingScreen ไม่กำลัง loading อยู่
+        if (LoadingScreen.Instance != null && LoadingScreen.Instance.IsLoading())
+        {
+            DebugLog("⚠️ Cannot interact - loading in progress");
+            return false;
+        }
+
         return true;
     }
 
     public void Interact()
     {
-        Debug.Log($"[SceneTrigger] Interact -> Loading Scene: {sceneToLoad}, Spawn: {targetSpawnPointName}");
+        if (!CanInteract())
+        {
+            return;
+        }
 
-        // ส่งชื่อ spawn point ให้ Scene ปลายทาง
+        lastInteractTime = Time.time;
+
+        DebugLog($"🚪 Interact -> Loading Scene: {sceneToLoad}, Spawn: {targetSpawnPointName}");
+        StartCoroutine(LoadSceneWithTransition());
+    }
+
+    private IEnumerator LoadSceneWithTransition()
+    {
+        // ส่งชื่อ spawn point ให้ SpawnManager
         SpawnManager.targetSpawnPointName = targetSpawnPointName;
+        DebugLog($"📍 Set target spawn: {targetSpawnPointName}");
 
-        // ถ้ามีระบบ Fade / LoadingScreen
+        // ใช้ LoadSceneAsync
         if (LoadingScreen.Instance != null)
         {
-            StartCoroutine(LoadingScreen.Instance.FadeTransition(() =>
-            {
-                SceneManager.LoadScene(sceneToLoad);
-            }, 1f)); // delay หลังโหลดเสร็จ 1 วินาที
+            yield return StartCoroutine(LoadingScreen.Instance.LoadSceneAsync(sceneToLoad));
         }
         else
         {
-            // ไม่มี LoadingScreen -> โหลดตรงๆ
+            DebugLog("⚠️ LoadingScreen not found, loading directly");
+            LoadScene();
+        }
+
+        DebugLog("✅ Scene transition complete");
+    }
+
+    private void LoadScene()
+    {
+        if (Application.CanStreamedLevelBeLoaded(sceneToLoad))
+        {
+            DebugLog($"✅ Loading scene: {sceneToLoad}");
             SceneManager.LoadScene(sceneToLoad);
+        }
+        else
+        {
+            Debug.LogError($"❌ Scene '{sceneToLoad}' not found in Build Settings!");
+            Debug.LogError("💡 Add scene in File > Build Settings");
+            lastInteractTime = -999f;
         }
     }
 
-    // ----------------------------------------------------------
-    // ตัวนี้ไม่มี OnTriggerEnter/Exit เพราะ PlayerDetector จะจัดการเอง
-    // ประตูวาปแค่ต้องมี Collider + isTrigger = true
-    // ----------------------------------------------------------
+    private void DebugLog(string message)
+    {
+        if (debugMode)
+        {
+            Debug.Log($"[SceneTrigger] {message}");
+        }
+    }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawWireCube(transform.position, Vector3.one * 0.5f);
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, 0.75f);
+
+#if UNITY_EDITOR
+        UnityEditor.Handles.Label(
+            transform.position + Vector3.up * 1.5f,
+            $"→ {sceneToLoad}\nSpawn: {targetSpawnPointName}",
+            new GUIStyle()
+            {
+                normal = new GUIStyleState() { textColor = Color.yellow },
+                fontSize = 12,
+                fontStyle = FontStyle.Bold
+            }
+        );
+#endif
+    }
 }
