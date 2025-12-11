@@ -12,7 +12,6 @@ public class NPC : MonoBehaviour, IInteractable
     private bool isTyping, isDialogueActive;
     private Animator animator;
 
-
     [SerializeField] private Sprite defaultSprite;
 
     public bool CanInteract()
@@ -24,7 +23,6 @@ public class NPC : MonoBehaviour, IInteractable
     {
         dialogueUI = DialogueController.instance;
         animator = GetComponent<Animator>();
-
 
         if (dialogueUI.npcPortraitImage != null && dialogueUI.npcPortraitImage.sprite == null)
             dialogueUI.npcPortraitImage.sprite = defaultSprite;
@@ -46,7 +44,31 @@ public class NPC : MonoBehaviour, IInteractable
         isDialogueActive = true;
         dialogueIndex = 0;
 
-        // ✅ ตรวจสอบว่ามีรูป 2 รูปหรือไม่
+        // 🎬 ตรวจสอบว่าต้องแสดง cutscene หรือไม่
+        if (dialogueData.useCutscene && dialogueData.cutsceneImage != null)
+        {
+            // Pause เกมก่อน
+            PauseController.isPaused = true;
+            Time.timeScale = 0f;
+
+            // แสดง cutscene ก่อน แล้วค่อยเริ่ม dialogue
+            dialogueUI.ShowCutscene(
+                dialogueData.cutsceneImage,
+                dialogueData.cutsceneDuration,
+                dialogueData.cutsceneFadeDuration,
+                () => SetupDialogueAfterCutscene()
+            );
+        }
+        else
+        {
+            // ไม่มี cutscene → เริ่ม dialogue ปกติ
+            SetupDialogueAfterCutscene();
+        }
+    }
+
+    void SetupDialogueAfterCutscene()
+    {
+        // ตรวจสอบว่ามีรูป 2 รูปหรือไม่
         bool useTwoPortraits = (dialogueData.leftPortrait != null && dialogueData.rightPortrait != null);
 
         if (useTwoPortraits)
@@ -62,7 +84,6 @@ public class NPC : MonoBehaviour, IInteractable
             dialogueUI.npcPortraitImage.SetNativeSize();
             dialogueUI.npcPortraitImage.gameObject.SetActive(true);
 
-            // ✅ เพิ่ม Debug
             Debug.Log($"leftPortrait: {dialogueData.leftPortrait?.name ?? "NULL"}");
             Debug.Log($"rightPortrait: {dialogueData.rightPortrait?.name ?? "NULL"}");
             Debug.Log($"useTwoPortraits: {useTwoPortraits}");
@@ -70,8 +91,12 @@ public class NPC : MonoBehaviour, IInteractable
 
         dialogueUI.ShowDialogue(true);
 
-        PauseController.isPaused = true;
-        Time.timeScale = 0f;
+        // Pause เกม (ถ้ายังไม่ได้ pause)
+        if (!PauseController.isPaused)
+        {
+            PauseController.isPaused = true;
+            Time.timeScale = 0f;
+        }
 
         DisplayCurrentLine();
     }
@@ -176,7 +201,7 @@ public class NPC : MonoBehaviour, IInteractable
     {
         StopAllCoroutines();
 
-        // ✅ ตรวจสอบว่าใช้ระบบ 2 portraits หรือไม่
+        // ตรวจสอบว่าใช้ระบบ 2 portraits หรือไม่
         bool useTwoPortraits = (dialogueData.leftPortrait != null && dialogueData.rightPortrait != null);
 
         if (useTwoPortraits && dialogueData.speakerPerLine != null &&

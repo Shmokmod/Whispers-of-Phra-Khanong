@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
+using System;
 
 public class DialogueController : MonoBehaviour
 {
@@ -31,6 +32,11 @@ public class DialogueController : MonoBehaviour
     public Vector2 activeScale = new Vector2(1.05f, 1.05f);
     public Vector2 inactiveScale = Vector2.one;
 
+    [Header("🎬 Cutscene System")]
+    public GameObject cutscenePanel;
+    public Image cutsceneImage;
+    public CanvasGroup cutsceneCanvasGroup;
+
     [HideInInspector] public Image npcPortraitImage;
 
     private SpeakerPosition currentActiveSpeaker = SpeakerPosition.None;
@@ -45,7 +51,7 @@ public class DialogueController : MonoBehaviour
 
     void Start()
     {
-        // ✅ ซ่อน GameObject ตอนเริ่มต้น
+        // ซ่อน GameObject ตอนเริ่มต้น
         if (leftPortraitImage != null)
         {
             leftPortraitImage.gameObject.SetActive(false);
@@ -58,6 +64,14 @@ public class DialogueController : MonoBehaviour
             rightPortraitImage.gameObject.SetActive(false);
             if (rightPortraitCanvasGroup != null)
                 rightPortraitCanvasGroup.alpha = 0f;
+        }
+
+        // ซ่อน Cutscene Panel
+        if (cutscenePanel != null)
+        {
+            cutscenePanel.SetActive(false);
+            if (cutsceneCanvasGroup != null)
+                cutsceneCanvasGroup.alpha = 0f;
         }
     }
 
@@ -95,18 +109,18 @@ public class DialogueController : MonoBehaviour
         {
             leftPortraitImage.sprite = leftSprite;
             leftPortraitImage.SetNativeSize();
-            leftPortraitImage.gameObject.SetActive(true); // ✅ Force Active
+            leftPortraitImage.gameObject.SetActive(true);
 
             Debug.Log($"Left Portrait Set: {leftSprite.name}");
 
             if (leftPortraitCanvasGroup != null)
             {
-                leftPortraitCanvasGroup.alpha = 1f; // ✅ ทดสอบให้เด่นเลย
+                leftPortraitCanvasGroup.alpha = 1f;
                 Debug.Log($"Left Alpha: {leftPortraitCanvasGroup.alpha}");
 
                 if (leftPortraitRect != null)
                 {
-                    leftPortraitRect.localScale = Vector3.one; // ✅ Scale ปกติ
+                    leftPortraitRect.localScale = Vector3.one;
                     Debug.Log($"Left Scale: {leftPortraitRect.localScale}");
                 }
             }
@@ -120,18 +134,18 @@ public class DialogueController : MonoBehaviour
         {
             rightPortraitImage.sprite = rightSprite;
             rightPortraitImage.SetNativeSize();
-            rightPortraitImage.gameObject.SetActive(true); // ✅ Force Active
+            rightPortraitImage.gameObject.SetActive(true);
 
             Debug.Log($"Right Portrait Set: {rightSprite.name}");
 
             if (rightPortraitCanvasGroup != null)
             {
-                rightPortraitCanvasGroup.alpha = 1f; // ✅ ทดสอบให้เด่นเลย
+                rightPortraitCanvasGroup.alpha = 1f;
                 Debug.Log($"Right Alpha: {rightPortraitCanvasGroup.alpha}");
 
                 if (rightPortraitRect != null)
                 {
-                    rightPortraitRect.localScale = Vector3.one; // ✅ Scale ปกติ
+                    rightPortraitRect.localScale = Vector3.one;
                     Debug.Log($"Right Scale: {rightPortraitRect.localScale}");
                 }
             }
@@ -206,7 +220,7 @@ public class DialogueController : MonoBehaviour
 
     public void HideAllPortraits()
     {
-        // ✅ ซ่อน GameObject แทนการใช้ Alpha
+        // ซ่อน GameObject แทนการใช้ Alpha
         if (leftPortraitImage != null)
         {
             if (Application.isPlaying && leftPortraitImage.gameObject.activeInHierarchy)
@@ -238,6 +252,42 @@ public class DialogueController : MonoBehaviour
         }
 
         currentActiveSpeaker = SpeakerPosition.None;
+    }
+
+    // 🎬 ฟังก์ชันแสดง Cutscene
+    public void ShowCutscene(Sprite cutsceneSprite, float duration, float fadeDuration, Action onComplete)
+    {
+        if (cutscenePanel == null || cutsceneImage == null || cutsceneCanvasGroup == null)
+        {
+            Debug.LogWarning("⚠️ Cutscene components not assigned in DialogueController!");
+            onComplete?.Invoke();
+            return;
+        }
+
+        if (cutsceneSprite == null)
+        {
+            Debug.LogWarning("⚠️ Cutscene sprite is null!");
+            onComplete?.Invoke();
+            return;
+        }
+
+        // ตั้งค่ารูป cutscene
+        cutsceneImage.sprite = cutsceneSprite;
+        cutscenePanel.SetActive(true);
+        cutsceneCanvasGroup.alpha = 0f;
+
+        // Sequence: Fade In → รอ → Fade Out
+        Sequence cutsceneSequence = DOTween.Sequence();
+        cutsceneSequence.SetUpdate(true); // ใช้ unscaled time
+
+        cutsceneSequence.Append(cutsceneCanvasGroup.DOFade(1f, fadeDuration))
+                        .AppendInterval(duration)
+                        .Append(cutsceneCanvasGroup.DOFade(0f, fadeDuration))
+                        .OnComplete(() =>
+                        {
+                            cutscenePanel.SetActive(false);
+                            onComplete?.Invoke();
+                        });
     }
 
     public void ClearChoices()

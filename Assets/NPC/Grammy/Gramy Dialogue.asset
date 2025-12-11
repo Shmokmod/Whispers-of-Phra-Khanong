@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 090a81b3778af8e468682cd02520f6a5, type: 3}
+  m_Name: Gramy Dialogue
+  m_EditorClassIdentifier: Assembly-CSharp::NPCdialogue
+  npcName: 
+  npcPortrait: {fileID: 0}
+  leftPortrait: {fileID: 0}
+  rightPortrait: {fileID: 0}
+  useCutscene: 1
+  cutsceneImage: {fileID: 0}
+  cutsceneDuration: 2
+  cutsceneFadeDuration: 0.5
+  dialogueLines: []
+  speakerPerLine: 
+  typingSpeed: 0.05
+  autoProgressLine: 
+  autoProgressDelay: 1
+  endDialogueLine: 
+  choices: []
+  statementUnlocks: []
