@@ -103,41 +103,43 @@ public class NPC : MonoBehaviour, IInteractable
 
     void NextLine()
     {
+        Debug.Log($"➡️ NextLine Called - Index: {dialogueIndex}, isTyping: {isTyping}");
+
+        // ถ้ากำลังพิมพ์ → แสดงข้อความทั้งหมดทันที
         if (isTyping)
         {
+            Debug.Log("⏭️ Skipping typing animation");
             StopAllCoroutines();
             dialogueUI.SetDialogueText(dialogueData.dialogueLines[dialogueIndex]);
             isTyping = false;
+
+            // ✅ เช็ค Choice หลังแสดงข้อความทั้งหมด
+            CheckAndDisplayChoices();
             return;
         }
 
-        // จบบท
+        // ✅ ถ้ามี Choice อยู่แล้ว → ไม่ทำอะไร (รอให้เลือกก่อน)
+        if (dialogueUI.choiceContainer.childCount > 0)
+        {
+            Debug.Log($"⚠️ Choices already displayed ({dialogueUI.choiceContainer.childCount} buttons). Waiting for selection.");
+            return;
+        }
+
+        // ✅ เช็คว่าบรรทัดนี้เป็นบรรทัดสุดท้ายหรือไม่
         if (dialogueData.endDialogueLine != null &&
             dialogueData.endDialogueLine.Length > dialogueIndex &&
             dialogueData.endDialogueLine[dialogueIndex])
         {
+            Debug.Log("🔚 End dialogue line detected");
             EndDialogue();
             return;
         }
 
-        // ตัวเลือก
-        if (dialogueData.choices != null && dialogueData.choices.Length > 0)
-        {
-            foreach (DialogueChoice dialogueChoice in dialogueData.choices)
-            {
-                if (dialogueChoice.dialogueIndex == dialogueIndex)
-                {
-                    dialogueUI.ClearChoices();
-                    DisplayChoices(dialogueChoice);
-                    return;
-                }
-            }
-        }
-
-        // ไม่มีตัวเลือก → ไปบรรทัดถัดไป
+        // ✅ ไม่มีตัวเลือก → ไปบรรทัดถัดไป
         dialogueUI.ClearChoices();
-
         dialogueIndex++;
+
+        Debug.Log($"📄 Moving to next line. New Index: {dialogueIndex}");
 
         if (dialogueIndex < dialogueData.dialogueLines.Length)
         {
@@ -146,6 +148,7 @@ public class NPC : MonoBehaviour, IInteractable
         }
         else
         {
+            Debug.Log("🔚 No more dialogue lines. Ending dialogue.");
             EndDialogue();
         }
     }
@@ -155,6 +158,8 @@ public class NPC : MonoBehaviour, IInteractable
         isTyping = true;
         dialogueUI.SetDialogueText("");
 
+        Debug.Log($"⌨️ TypeLine - Index: {dialogueIndex}, Text: {dialogueData.dialogueLines[dialogueIndex]}");
+
         foreach (char letter in dialogueData.dialogueLines[dialogueIndex])
         {
             dialogueUI.SetDialogueText(dialogueUI.dialogueText.text + letter);
@@ -162,14 +167,52 @@ public class NPC : MonoBehaviour, IInteractable
         }
 
         isTyping = false;
+        Debug.Log($"✅ TypeLine Finished - Index: {dialogueIndex}");
 
-        // Auto progress line
-        if (dialogueData.autoProgressLine != null &&
+        // ✅ หลังพิมพ์เสร็จ → เช็คว่ามี Choice หรือไม่
+        CheckAndDisplayChoices();
+
+        // Auto progress line (ถ้าไม่มี Choice)
+        if (dialogueUI.choiceContainer.childCount == 0 &&
+            dialogueData.autoProgressLine != null &&
             dialogueData.autoProgressLine.Length > dialogueIndex &&
             dialogueData.autoProgressLine[dialogueIndex])
         {
+            Debug.Log($"⏩ Auto Progress - Waiting {dialogueData.autoProgressDelay}s");
             yield return new WaitForSecondsRealtime(dialogueData.autoProgressDelay);
             NextLine();
+        }
+    }
+
+    // ✅ ฟังก์ชันใหม่: เช็คและแสดง Choice
+    void CheckAndDisplayChoices()
+    {
+        Debug.Log($"🔍 CheckAndDisplayChoices - Current Index: {dialogueIndex}");
+
+        if (dialogueData.choices == null)
+        {
+            Debug.Log("⚠️ dialogueData.choices is NULL");
+            return;
+        }
+
+        Debug.Log($"📋 Total Choices: {dialogueData.choices.Length}");
+
+        if (dialogueData.choices.Length > 0)
+        {
+            foreach (DialogueChoice dialogueChoice in dialogueData.choices)
+            {
+                Debug.Log($"   - Choice at Index: {dialogueChoice.dialogueIndex}");
+
+                if (dialogueChoice.dialogueIndex == dialogueIndex)
+                {
+                    Debug.Log($"✅ MATCH! Displaying {dialogueChoice.choice.Length} choices");
+                    dialogueUI.ClearChoices();
+                    DisplayChoices(dialogueChoice);
+                    return;
+                }
+            }
+
+            Debug.Log($"❌ No choice found for index {dialogueIndex}");
         }
     }
 
@@ -239,14 +282,46 @@ public class NPC : MonoBehaviour, IInteractable
 
     void DisplayChoices(DialogueChoice choice)
     {
+        Debug.Log($"🎯 DisplayChoices - Creating {choice.choice.Length} buttons");
+        Debug.Log($"📦 Choice Container: {dialogueUI.choiceContainer.name}");
+        Debug.Log($"   Active: {dialogueUI.choiceContainer.gameObject.activeSelf}");
+        Debug.Log($"   Position: {dialogueUI.choiceContainer.position}");
+
+        // เช็ค Layout Group
+        var layoutGroup = dialogueUI.choiceContainer.GetComponent<UnityEngine.UI.HorizontalLayoutGroup>();
+        if (layoutGroup != null)
+        {
+            Debug.Log($"📐 HorizontalLayoutGroup found:");
+            Debug.Log($"   Spacing: {layoutGroup.spacing}");
+            Debug.Log($"   Child Force Expand Width: {layoutGroup.childForceExpandWidth}");
+            Debug.Log($"   Enabled: {layoutGroup.enabled}");
+        }
+        else
+        {
+            Debug.LogWarning("⚠️ No HorizontalLayoutGroup found on ChoiceContainer!");
+        }
+
         for (int i = 0; i < choice.choice.Length; i++)
         {
             int nextIndex = choice.nextDialogueIndex[i];
             int choiceIndex = i;
 
-            dialogueUI.CreateChoiceButton(choice.choice[i],
+            Debug.Log($"   Button {i}: '{choice.choice[i]}' → Index {nextIndex}");
+
+            GameObject btn = dialogueUI.CreateChoiceButton(choice.choice[i],
                 () => ChooseOption(choice, choiceIndex, nextIndex));
+
+            Debug.Log($"      ├─ Created: {btn.name}");
+            Debug.Log($"      ├─ Active: {btn.activeSelf}");
+            Debug.Log($"      ├─ Position: {btn.transform.position}");
+            Debug.Log($"      ├─ LocalPosition: {btn.transform.localPosition}");
+            Debug.Log($"      └─ Parent: {btn.transform.parent.name}");
         }
+
+        // บังคับ Rebuild Layout
+        UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(dialogueUI.choiceContainer.GetComponent<RectTransform>());
+
+        Debug.Log($"✅ Choice buttons created. Container child count: {dialogueUI.choiceContainer.childCount}");
     }
 
     void ChooseOption(DialogueChoice choice, int choiceIndex, int nextIndex)

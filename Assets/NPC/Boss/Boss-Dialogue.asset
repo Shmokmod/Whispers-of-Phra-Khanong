@@ -25,10 +25,13 @@ MonoBehaviour:
   - "\u0E1A\u0E17\u0E1E\u0E39\u0E14\u0E46"
   - "\u0E1A\u0E17\u0E1E\u0E39\u0E14\u0E46"
   - "\u0E1A\u0E17\u0E1E\u0E39\u0E14\u0E46"
-  speakerPerLine: 01000000020000000100000002000000
+  - "\u0E43\u0E0A\u0E48 \u0E2B\u0E23\u0E37\u0E2D \u0E44\u0E21\u0E48"
+  - "\u0E0A\u0E48\u0E32\u0E22\u0E46"
+  - "\u0E44\u0E21\u0E48\u0E46"
+  speakerPerLine: 01000000020000000100000001000000020000000200000002000000
   typingSpeed: 0.05
-  autoProgressLine: 01010101
+  autoProgressLine: 01010101010101
   autoProgressDelay: 1
-  endDialogueLine: 00000001
+  endDialogueLine: 00000000000001
   choices: []
   statementUnlocks: []
