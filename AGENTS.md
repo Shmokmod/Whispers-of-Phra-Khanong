@@ -2,7 +2,7 @@
 - Project name: Whispers-of-Phra-Khanong
 - Unity version: Unity 6000.2.8f1
 - Active game object:
-  - Name: Soilder-Sheet (1)_0
+  - Name: ด่าน1
   - Tag: Untagged
   - Layer: Default
 <!-- UNITY CODE ASSIST INSTRUCTIONS END -->

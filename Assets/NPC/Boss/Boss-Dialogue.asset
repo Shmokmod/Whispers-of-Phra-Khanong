@@ -33,5 +33,11 @@ MonoBehaviour:
   autoProgressLine: 01010101010101
   autoProgressDelay: 1
   endDialogueLine: 00000000000001
-  choices: []
+  choices:
+  - dialogueIndex: 4
+    choice:
+    - "\u0E0A\u0E48\u0E32\u0E22\u0E46"
+    - "\u0E44\u0E21\u0E48\u0E46"
+    nextDialogueIndex: 0500000006000000
+    statementToUnlock: []
   statementUnlocks: []
