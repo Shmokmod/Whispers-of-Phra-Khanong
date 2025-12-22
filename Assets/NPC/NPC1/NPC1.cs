@@ -88,10 +88,18 @@ public class NPC : MonoBehaviour, IInteractable
     {
         isDialogueActive = true;
         dialogueIndex = 0;
-        waitingForChoice = false; // ✅ Reset
+        waitingForChoice = false;
+
+        // ✅ เพิ่มบรรทัดนี้ - บอก QuestManager ว่า dialogue เริ่มแล้ว
+        if (!string.IsNullOrEmpty(dialogueData.dialogueID))
+        {
+            QuestManager.Instance?.OnDialogueTrigger(dialogueData.dialogueID);
+        }
+        // ✅ เพิ่มจบ
 
         if (dialogueData.useCutscene && dialogueData.cutsceneImage != null)
         {
+            // ... โค้ดเดิมต่อ
             PauseController.isPaused = true;
             Time.timeScale = 0f;
 
@@ -256,6 +264,11 @@ public class NPC : MonoBehaviour, IInteractable
 
         dialogueUI.SetDialogueText("");
         dialogueUI.ClearChoices();
+
+        if (!string.IsNullOrEmpty(dialogueData.dialogueID))
+        {
+            QuestManager.Instance?.OnDialogueTrigger(dialogueData.dialogueID);
+        }
 
         if (dialogueData.leftPortrait != null && dialogueData.rightPortrait != null)
         {

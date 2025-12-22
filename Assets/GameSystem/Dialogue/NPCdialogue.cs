@@ -11,6 +11,12 @@ public enum SpeakerPosition
 [CreateAssetMenu(fileName = "New NPC Dialogue", menuName = "Dialogue/NPC Dialogue")]
 public class NPCdialogue : ScriptableObject
 {
+
+    // ✅ เพิ่มบรรทัดนี้
+    [Header("Quest Integration")]
+    public string dialogueID; // ID สำหรับเชื่อมกับ Quest System
+
+
     [Header("Character Info")]
     public string npcName;
 
