@@ -51,6 +51,7 @@ public class DialogueController : MonoBehaviour
 
     void Start()
     {
+        // ✅ เริ่มต้นด้วยการปิด portraits ทั้งหมด
         if (leftPortraitImage != null)
         {
             leftPortraitImage.gameObject.SetActive(false);
@@ -81,26 +82,13 @@ public class DialogueController : MonoBehaviour
         Canvas canvas = dialogueUI.GetComponentInParent<Canvas>();
         if (canvas != null)
         {
-            Debug.Log($"📊 Canvas Settings:");
-            Debug.Log($"   Render Mode: {canvas.renderMode}");
-            Debug.Log($"   Sort Order: {canvas.sortingOrder}");
-            Debug.Log($"   Layer: {LayerMask.LayerToName(canvas.gameObject.layer)}");
-
             CanvasScaler scaler = canvas.GetComponent<CanvasScaler>();
-            if (scaler != null)
+            if (scaler != null && scaler.uiScaleMode != CanvasScaler.ScaleMode.ScaleWithScreenSize)
             {
-                Debug.Log($"   Canvas Scaler: {scaler.uiScaleMode}");
-                Debug.Log($"   Reference Resolution: {scaler.referenceResolution}");
-
-                if (scaler.uiScaleMode != CanvasScaler.ScaleMode.ScaleWithScreenSize)
-                {
-                    Debug.LogWarning("⚠️ Canvas Scaler ไม่ถูกต้อง! กำลังแก้ไข...");
-                    scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-                    scaler.referenceResolution = new Vector2(1920, 1080);
-                    scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
-                    scaler.matchWidthOrHeight = 0.5f;
-                    Debug.Log("✅ Canvas Scaler แก้ไขเรียบร้อย!");
-                }
+                scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+                scaler.referenceResolution = new Vector2(1920, 1080);
+                scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+                scaler.matchWidthOrHeight = 0.5f;
             }
         }
     }
@@ -115,10 +103,6 @@ public class DialogueController : MonoBehaviour
             choiceRect.pivot = new Vector2(0.5f, 0.5f);
             choiceRect.anchoredPosition = new Vector2(0f, 250f);
             choiceRect.sizeDelta = new Vector2(1000f, 100f);
-
-            Debug.Log($"✅ ChoicesPanel repositioned:");
-            Debug.Log($"   Anchored Position: {choiceRect.anchoredPosition}");
-            Debug.Log($"   Size: {choiceRect.sizeDelta}");
         }
     }
 
@@ -134,11 +118,41 @@ public class DialogueController : MonoBehaviour
 
     public void SetNPCinfo(string npcName, Sprite portrait)
     {
+        Debug.Log($"🖼️ SetNPCinfo: {npcName}, Portrait: {(portrait != null ? portrait.name : "NULL")}");
+
         SetSpeakerName(npcName);
-        if (leftPortraitImage != null)
+
+        if (leftPortraitImage != null && portrait != null)
         {
             leftPortraitImage.sprite = portrait;
+            leftPortraitImage.SetNativeSize();
+
+            // ✅ CRITICAL FIX: บังคับเปิดและตั้งค่า alpha
+            leftPortraitImage.gameObject.SetActive(true);
+            leftPortraitImage.enabled = true;
+
+            if (leftPortraitCanvasGroup != null)
+            {
+                leftPortraitCanvasGroup.alpha = 1f;
+                Debug.Log($"   ✅ CanvasGroup alpha set to 1");
+            }
+
+            if (leftPortraitRect != null)
+            {
+                leftPortraitRect.localScale = Vector3.one;
+            }
+
             npcPortraitImage = leftPortraitImage;
+
+            Debug.Log($"   Portrait Status:");
+            Debug.Log($"   - GameObject Active: {leftPortraitImage.gameObject.activeSelf}");
+            Debug.Log($"   - Image Enabled: {leftPortraitImage.enabled}");
+            Debug.Log($"   - Sprite: {leftPortraitImage.sprite?.name}");
+            Debug.Log($"   - Color Alpha: {leftPortraitImage.color.a}");
+        }
+        else
+        {
+            Debug.LogWarning($"⚠️ Cannot set portrait - Image or Sprite is NULL");
         }
     }
 
@@ -150,39 +164,93 @@ public class DialogueController : MonoBehaviour
 
     public void SetupPortraits(Sprite leftSprite, Sprite rightSprite)
     {
-        Debug.Log("=== SetupPortraits Called ===");
+        Debug.Log($"🖼️ === SetupPortraits Called ===");
+        Debug.Log($"   Left Sprite: {(leftSprite != null ? leftSprite.name : "NULL")}");
+        Debug.Log($"   Right Sprite: {(rightSprite != null ? rightSprite.name : "NULL")}");
 
+        // ✅ LEFT PORTRAIT
         if (leftPortraitImage != null && leftSprite != null)
         {
             leftPortraitImage.sprite = leftSprite;
             leftPortraitImage.SetNativeSize();
-            leftPortraitImage.gameObject.SetActive(true);
 
+            // ✅ บังคับเปิด GameObject
+            leftPortraitImage.gameObject.SetActive(true);
+            leftPortraitImage.enabled = true;
+
+            // ✅ ตั้งค่า CanvasGroup
             if (leftPortraitCanvasGroup != null)
             {
                 leftPortraitCanvasGroup.alpha = 1f;
-                if (leftPortraitRect != null)
-                    leftPortraitRect.localScale = Vector3.one;
+                leftPortraitCanvasGroup.interactable = true;
+                leftPortraitCanvasGroup.blocksRaycasts = true;
             }
+            else
+            {
+                Debug.LogWarning("⚠️ leftPortraitCanvasGroup is NULL!");
+            }
+
+            // ✅ ตั้งค่า Scale
+            if (leftPortraitRect != null)
+            {
+                leftPortraitRect.localScale = Vector3.one;
+            }
+
+            Debug.Log($"   Left Portrait Setup:");
+            Debug.Log($"   - Active: {leftPortraitImage.gameObject.activeSelf}");
+            Debug.Log($"   - Enabled: {leftPortraitImage.enabled}");
+            Debug.Log($"   - Alpha: {(leftPortraitCanvasGroup != null ? leftPortraitCanvasGroup.alpha : -1)}");
+        }
+        else
+        {
+            Debug.LogWarning("⚠️ Left portrait setup skipped - Image or Sprite NULL");
         }
 
+        // ✅ RIGHT PORTRAIT
         if (rightPortraitImage != null && rightSprite != null)
         {
             rightPortraitImage.sprite = rightSprite;
             rightPortraitImage.SetNativeSize();
-            rightPortraitImage.gameObject.SetActive(true);
 
+            // ✅ บังคับเปิด GameObject
+            rightPortraitImage.gameObject.SetActive(true);
+            rightPortraitImage.enabled = true;
+
+            // ✅ ตั้งค่า CanvasGroup
             if (rightPortraitCanvasGroup != null)
             {
                 rightPortraitCanvasGroup.alpha = 1f;
-                if (rightPortraitRect != null)
-                    rightPortraitRect.localScale = Vector3.one;
+                rightPortraitCanvasGroup.interactable = true;
+                rightPortraitCanvasGroup.blocksRaycasts = true;
             }
+            else
+            {
+                Debug.LogWarning("⚠️ rightPortraitCanvasGroup is NULL!");
+            }
+
+            // ✅ ตั้งค่า Scale
+            if (rightPortraitRect != null)
+            {
+                rightPortraitRect.localScale = Vector3.one;
+            }
+
+            Debug.Log($"   Right Portrait Setup:");
+            Debug.Log($"   - Active: {rightPortraitImage.gameObject.activeSelf}");
+            Debug.Log($"   - Enabled: {rightPortraitImage.enabled}");
+            Debug.Log($"   - Alpha: {(rightPortraitCanvasGroup != null ? rightPortraitCanvasGroup.alpha : -1)}");
         }
+        else
+        {
+            Debug.LogWarning("⚠️ Right portrait setup skipped - Image or Sprite NULL");
+        }
+
+        Debug.Log($"✅ === SetupPortraits Complete ===\n");
     }
 
     public void SetActiveSpeaker(SpeakerPosition position)
     {
+        Debug.Log($"📢 SetActiveSpeaker: {position}");
+
         if (position == currentActiveSpeaker)
             return;
 
@@ -211,6 +279,13 @@ public class DialogueController : MonoBehaviour
     {
         if (canvasGroup == null) return;
 
+        // ✅ ตรวจสอบว่า GameObject active อยู่
+        if (!canvasGroup.gameObject.activeSelf)
+        {
+            Debug.LogWarning($"⚠️ CanvasGroup GameObject is not active!");
+            canvasGroup.gameObject.SetActive(true);
+        }
+
         if (Application.isPlaying && canvasGroup.gameObject.activeInHierarchy)
         {
             canvasGroup.DOFade(activeSpeakerAlpha, fadeDuration).SetUpdate(true);
@@ -223,6 +298,8 @@ public class DialogueController : MonoBehaviour
             if (rectTransform != null)
                 rectTransform.localScale = activeScale;
         }
+
+        Debug.Log($"   Highlighted - Alpha: {canvasGroup.alpha}");
     }
 
     void FadeSpeaker(CanvasGroup canvasGroup, RectTransform rectTransform)
@@ -241,10 +318,14 @@ public class DialogueController : MonoBehaviour
             if (rectTransform != null)
                 rectTransform.localScale = inactiveScale;
         }
+
+        Debug.Log($"   Faded - Alpha: {canvasGroup.alpha}");
     }
 
     public void HideAllPortraits()
     {
+        Debug.Log("🔒 HideAllPortraits Called");
+
         if (leftPortraitImage != null)
         {
             if (Application.isPlaying && leftPortraitImage.gameObject.activeInHierarchy)
@@ -321,93 +402,32 @@ public class DialogueController : MonoBehaviour
 
     public GameObject CreateChoiceButton(string choiceText, UnityEngine.Events.UnityAction onClickAction)
     {
-        Debug.Log($"🔍 === Creating Choice Button: '{choiceText}' ===");
-
         if (choiceBottonPrefab == null)
         {
             Debug.LogError("❌ choiceBottonPrefab is NULL!");
             return null;
         }
 
-        Debug.Log($"   Prefab Name: {choiceBottonPrefab.name}");
-
-        // เช็ค Prefab components
-        Image prefabImage = choiceBottonPrefab.GetComponent<Image>();
-        Button prefabButton = choiceBottonPrefab.GetComponent<Button>();
-        RectTransform prefabRect = choiceBottonPrefab.GetComponent<RectTransform>();
-
-        Debug.Log($"   📦 Prefab Components:");
-        Debug.Log($"      ├─ Has Image: {prefabImage != null}");
-        if (prefabImage != null)
-        {
-            Debug.Log($"      │  ├─ Sprite: {(prefabImage.sprite != null ? prefabImage.sprite.name : "NULL")}");
-            Debug.Log($"      │  ├─ Color: {prefabImage.color}");
-            Debug.Log($"      │  └─ Enabled: {prefabImage.enabled}");
-        }
-        Debug.Log($"      ├─ Has Button: {prefabButton != null}");
-        Debug.Log($"      └─ Size: {(prefabRect != null ? prefabRect.sizeDelta.ToString() : "NULL")}");
-
-        // สร้างปุ่ม
         GameObject choiceButton = Instantiate(choiceBottonPrefab, choiceContainer);
 
-        Debug.Log($"   🎯 After Instantiate:");
-        Debug.Log($"      ├─ Name: {choiceButton.name}");
-        Debug.Log($"      ├─ Active: {choiceButton.activeSelf}");
-        Debug.Log($"      ├─ Layer: {LayerMask.LayerToName(choiceButton.layer)}");
-
-        // เช็ค Image หลัง Instantiate
-        Image buttonImage = choiceButton.GetComponent<Image>();
-        Debug.Log($"   🖼️ Button Image After Instantiate:");
-        Debug.Log($"      ├─ Has Image: {buttonImage != null}");
-        if (buttonImage != null)
-        {
-            Debug.Log($"      ├─ Sprite: {(buttonImage.sprite != null ? buttonImage.sprite.name : "NULL")}");
-            Debug.Log($"      ├─ Color: {buttonImage.color}");
-            Debug.Log($"      ├─ Enabled: {buttonImage.enabled}");
-            Debug.Log($"      ├─ Alpha: {buttonImage.color.a}");
-            Debug.Log($"      └─ Raycast Target: {buttonImage.raycastTarget}");
-        }
-
-        // เช็ค RectTransform
-        RectTransform buttonRect = choiceButton.GetComponent<RectTransform>();
-        if (buttonRect != null)
-        {
-            Debug.Log($"   📐 RectTransform:");
-            Debug.Log($"      ├─ Size: {buttonRect.sizeDelta}");
-            Debug.Log($"      ├─ Scale: {buttonRect.localScale}");
-            Debug.Log($"      ├─ Anchored Pos: {buttonRect.anchoredPosition}");
-            Debug.Log($"      └─ World Pos: {buttonRect.position}");
-        }
-
-        // ตั้งค่าข้อความ
         TMP_Text buttonText = choiceButton.GetComponentInChildren<TMP_Text>();
         if (buttonText != null)
         {
             buttonText.text = choiceText;
-            Debug.Log($"   📝 Text: '{buttonText.text}', Size: {buttonText.fontSize}, Color: {buttonText.color}");
-        }
-        else
-        {
-            Debug.LogError("❌ TMP_Text not found!");
         }
 
-        // ตั้งค่า Button
         Button button = choiceButton.GetComponent<Button>();
         if (button != null)
         {
             button.onClick.AddListener(onClickAction);
-            Debug.Log($"   🔘 Button Interactable: {button.interactable}, Transition: {button.transition}");
 
             if (!button.interactable)
             {
                 button.interactable = true;
-                Debug.LogWarning("⚠️ Button was not interactable - fixed!");
             }
         }
 
         choiceButton.SetActive(true);
-
-        Debug.Log($"✅ === Button Creation Complete ===\n");
 
         return choiceButton;
     }
