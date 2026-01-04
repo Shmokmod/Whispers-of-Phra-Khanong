@@ -12,7 +12,7 @@ public class DialogueController : MonoBehaviour
     public TMP_Text dialogueText;
     public TMP_Text nameText;
     public Transform choiceContainer;
-    public GameObject choiceBottonPrefab;
+    public GameObject choiceButtonPrefab;
 
     [Header("Portrait System - Left")]
     public Image leftPortraitImage;
@@ -250,9 +250,49 @@ public class DialogueController : MonoBehaviour
 
     public GameObject CreateChoiceButton(string choiceText, UnityEngine.Events.UnityAction onClickAction)
     {
-        GameObject choiceButton = Instantiate(choiceBottonPrefab, choiceContainer);
-        choiceButton.GetComponentInChildren<TMP_Text>().text = choiceText;
-        choiceButton.GetComponent<Button>().onClick.AddListener(onClickAction);
+        // ✅ เพิ่มการตรวจสอบ null
+        if (choiceButtonPrefab == null)
+        {
+            Debug.LogError("Choice Button Prefab is not assigned in DialogueController!");
+            return null;
+        }
+
+        if (choiceContainer == null)
+        {
+            Debug.LogError("Choice Container is not assigned in DialogueController!");
+            return null;
+        }
+
+        GameObject choiceButton = Instantiate(choiceButtonPrefab, choiceContainer);
+
+        if (choiceButton == null)
+        {
+            Debug.LogError("Failed to instantiate choice button!");
+            return null;
+        }
+
+        // ✅ ตรวจสอบ TMP_Text
+        TMP_Text buttonText = choiceButton.GetComponentInChildren<TMP_Text>();
+        if (buttonText != null)
+        {
+            buttonText.text = choiceText;
+        }
+        else
+        {
+            Debug.LogWarning("No TMP_Text found in choice button prefab!");
+        }
+
+        // ✅ ตรวจสอบ Button
+        Button button = choiceButton.GetComponent<Button>();
+        if (button != null)
+        {
+            button.onClick.AddListener(onClickAction);
+        }
+        else
+        {
+            Debug.LogWarning("No Button component found in choice button prefab!");
+        }
+
         return choiceButton;
     }
 }
