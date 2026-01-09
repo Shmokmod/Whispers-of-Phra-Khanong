@@ -3,38 +3,50 @@
 public class TriggerFog : MonoBehaviour
 {
     public GameObject Fog;
-    public float timeToFade = 1f;
+    public float fadeDuration = 1f;
 
     private Material fogMat;
-    private Color fogVisible;   // หมอกปกติ
-    private Color fogInvisible; // หมอกจาง
+    private Color fogVisible;     // หมอกทึบ
+    private Color fogInvisible;   // หมอกจาง
+    private Color startColor;
     private Color targetColor;
+
+    private float fadeTimer;
+    private bool isFading;
 
     void Start()
     {
         fogMat = Fog.GetComponent<MeshRenderer>().material;
 
-        fogVisible = fogMat.color;           // alpha เดิม (เช่น 1)
+        fogVisible = fogMat.color;
         fogInvisible = fogVisible;
-        fogInvisible.a = 0f;                 // จางหาย
+        fogInvisible.a = 0f;
 
-        targetColor = fogVisible;             // ค่าเริ่มต้น
+        targetColor = fogVisible;
+        isFading = false;
     }
 
     void Update()
     {
-        fogMat.color = Color.Lerp(
-            fogMat.color,
-            targetColor,
-            timeToFade * Time.deltaTime
-        );
+        if (!isFading) return;
+
+        fadeTimer += Time.deltaTime;
+        float t = fadeTimer / fadeDuration;
+
+        fogMat.color = Color.Lerp(startColor, targetColor, t);
+
+        if (t >= 1f)
+        {
+            fogMat.color = targetColor;
+            isFading = false;
+        }
     }
 
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Player"))
         {
-            targetColor = fogInvisible; // Fade Out
+            StartFade(fogInvisible); // Fade Out
         }
     }
 
@@ -42,7 +54,15 @@ public class TriggerFog : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            targetColor = fogVisible; // Fade In
+            StartFade(fogVisible); // Fade In
         }
+    }
+
+    void StartFade(Color newTarget)
+    {
+        startColor = fogMat.color;
+        targetColor = newTarget;
+        fadeTimer = 0f;
+        isFading = true;
     }
 }
