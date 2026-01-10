@@ -2,7 +2,7 @@
 - Project name: Whispers-of-Phra-Khanong
 - Unity version: Unity 6000.2.8f1
 - Active game object:
-  - Name: kids-Sheet_0
+  - Name: เข็นล้อ2-Sheet_0
   - Tag: Untagged
   - Layer: Default
 <!-- UNITY CODE ASSIST INSTRUCTIONS END -->
