@@ -3,28 +3,29 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using GameSystem;
+using System.Linq;
 
 public class NPC : MonoBehaviour, IInteractable
 {
     public NPCdialogue dialogueData;
     private DialogueController dialogueUI;
+    private CutsceneController cutsceneController;
     private int dialogueIndex;
     private bool isTyping, isDialogueActive;
     private Animator animator;
-
 
     [SerializeField] private Sprite defaultSprite;
 
     public bool CanInteract()
     {
-        return !isDialogueActive;
+        return !isDialogueActive && !CutsceneController.instance.IsPlayingCutscene();
     }
 
     void Start()
     {
         dialogueUI = DialogueController.instance;
+        cutsceneController = CutsceneController.instance;
         animator = GetComponent<Animator>();
-
 
         if (dialogueUI.npcPortraitImage != null && dialogueUI.npcPortraitImage.sprite == null)
             dialogueUI.npcPortraitImage.sprite = defaultSprite;
@@ -43,29 +44,39 @@ public class NPC : MonoBehaviour, IInteractable
 
     void StartDialogue()
     {
+        // ✅ เช็ค Cutscene ก่อนเริ่ม Dialogue
+        var beforeCutscenes = GetCutscenesByTiming(CutsceneTiming.BeforeDialogue);
+
+        if (beforeCutscenes.Length > 0)
+        {
+            PlayCutscenesSequentially(beforeCutscenes, () =>
+            {
+                InitializeDialogue();
+            });
+        }
+        else
+        {
+            InitializeDialogue();
+        }
+    }
+
+    void InitializeDialogue()
+    {
         isDialogueActive = true;
         dialogueIndex = 0;
 
-        // ✅ ตรวจสอบว่ามีรูป 2 รูปหรือไม่
         bool useTwoPortraits = (dialogueData.leftPortrait != null && dialogueData.rightPortrait != null);
 
         if (useTwoPortraits)
         {
-            // ใช้ระบบ 2 portraits
             dialogueUI.SetupPortraits(dialogueData.leftPortrait, dialogueData.rightPortrait);
         }
         else
         {
-            // ใช้ระบบเดิม (1 portrait)
             Sprite portrait = dialogueData.npcPortrait != null ? dialogueData.npcPortrait : defaultSprite;
             dialogueUI.SetNPCinfo(dialogueData.npcName, portrait);
             dialogueUI.npcPortraitImage.SetNativeSize();
             dialogueUI.npcPortraitImage.gameObject.SetActive(true);
-
-            // ✅ เพิ่ม Debug
-            Debug.Log($"leftPortrait: {dialogueData.leftPortrait?.name ?? "NULL"}");
-            Debug.Log($"rightPortrait: {dialogueData.rightPortrait?.name ?? "NULL"}");
-            Debug.Log($"useTwoPortraits: {useTwoPortraits}");
         }
 
         dialogueUI.ShowDialogue(true);
@@ -109,15 +120,32 @@ public class NPC : MonoBehaviour, IInteractable
             }
         }
 
-        // ไม่มีตัวเลือก → ไปบรรทัดถัดไป
         dialogueUI.ClearChoices();
-
         dialogueIndex++;
 
         if (dialogueIndex < dialogueData.dialogueLines.Length)
         {
-            DisplayCurrentLine();
-            CheckUnlockByDialogueIndex();
+            // ✅ เช็ค Cutscene ที่ตำแหน่งนี้
+            var cutscenes = GetCutscenesByDialogueIndex(dialogueIndex);
+
+            if (cutscenes.Length > 0)
+            {
+                // ปิด Dialogue ชั่วคราว
+                dialogueUI.ShowDialogue(false);
+
+                PlayCutscenesSequentially(cutscenes, () =>
+                {
+                    // เปิด Dialogue กลับมา
+                    dialogueUI.ShowDialogue(true);
+                    DisplayCurrentLine();
+                    CheckUnlockByDialogueIndex();
+                });
+            }
+            else
+            {
+                DisplayCurrentLine();
+                CheckUnlockByDialogueIndex();
+            }
         }
         else
         {
@@ -138,7 +166,6 @@ public class NPC : MonoBehaviour, IInteractable
 
         isTyping = false;
 
-        // Auto progress line
         if (dialogueData.autoProgressLine != null &&
             dialogueData.autoProgressLine.Length > dialogueIndex &&
             dialogueData.autoProgressLine[dialogueIndex])
@@ -150,13 +177,34 @@ public class NPC : MonoBehaviour, IInteractable
 
     public void EndDialogue()
     {
+        // ✅ เช็ค Cutscene หลังจบ Dialogue
+        var afterCutscenes = GetCutscenesByTiming(CutsceneTiming.AfterDialogue);
+
+        if (afterCutscenes.Length > 0)
+        {
+            // ปิด Dialogue UI ก่อน
+            CloseDialogueUI();
+
+            PlayCutscenesSequentially(afterCutscenes, () =>
+            {
+                FinishDialogue();
+            });
+        }
+        else
+        {
+            CloseDialogueUI();
+            FinishDialogue();
+        }
+    }
+
+    void CloseDialogueUI()
+    {
         StopAllCoroutines();
         isDialogueActive = false;
 
         dialogueUI.SetDialogueText("");
         dialogueUI.ClearChoices();
 
-        // ซ่อนรูปทั้งหมด
         if (dialogueData.leftPortrait != null && dialogueData.rightPortrait != null)
         {
             dialogueUI.HideAllPortraits();
@@ -167,7 +215,10 @@ public class NPC : MonoBehaviour, IInteractable
         }
 
         dialogueUI.ShowDialogue(false);
+    }
 
+    void FinishDialogue()
+    {
         PauseController.isPaused = false;
         Time.timeScale = 1f;
     }
@@ -176,23 +227,19 @@ public class NPC : MonoBehaviour, IInteractable
     {
         StopAllCoroutines();
 
-        // ✅ ตรวจสอบว่าใช้ระบบ 2 portraits หรือไม่
         bool useTwoPortraits = (dialogueData.leftPortrait != null && dialogueData.rightPortrait != null);
 
         if (useTwoPortraits && dialogueData.speakerPerLine != null &&
             dialogueIndex < dialogueData.speakerPerLine.Length)
         {
-            // ใช้ระบบ 2 portraits
             SpeakerPosition speaker = dialogueData.speakerPerLine[dialogueIndex];
             dialogueUI.SetActiveSpeaker(speaker);
 
-            // เปลี่ยนชื่อตามตำแหน่ง
             string speakerName = GetSpeakerName(speaker);
             dialogueUI.SetSpeakerName(speakerName);
         }
         else
         {
-            // ใช้ระบบเดิม
             dialogueUI.SetSpeakerName(dialogueData.npcName);
         }
 
@@ -204,7 +251,7 @@ public class NPC : MonoBehaviour, IInteractable
         switch (position)
         {
             case SpeakerPosition.Left:
-                return "ตัวละคร A"; // แก้ไขชื่อตามที่ต้องการ
+                return "ตัวละคร A";
             case SpeakerPosition.Right:
                 return "ตัวละคร B";
             default:
@@ -276,5 +323,55 @@ public class NPC : MonoBehaviour, IInteractable
                 }
             }
         }
+    }
+
+    // ==================== Cutscene Helpers ====================
+
+    CutsceneEvent[] GetCutscenesByTiming(CutsceneTiming timing)
+    {
+        if (dialogueData.cutsceneEvents == null)
+            return new CutsceneEvent[0];
+
+        return dialogueData.cutsceneEvents
+            .Where(c => c.timing == timing)
+            .ToArray();
+    }
+
+    CutsceneEvent[] GetCutscenesByDialogueIndex(int index)
+    {
+        if (dialogueData.cutsceneEvents == null)
+            return new CutsceneEvent[0];
+
+        return dialogueData.cutsceneEvents
+            .Where(c => c.timing == CutsceneTiming.AtDialogueIndex && c.dialogueIndex == index)
+            .ToArray();
+    }
+
+    void PlayCutscenesSequentially(CutsceneEvent[] cutscenes, System.Action onComplete)
+    {
+        StartCoroutine(PlayCutscenesRoutine(cutscenes, onComplete));
+    }
+
+    IEnumerator PlayCutscenesRoutine(CutsceneEvent[] cutscenes, System.Action onComplete)
+    {
+        foreach (var cutscene in cutscenes)
+        {
+            bool cutsceneFinished = false;
+
+            if (cutscene.cutsceneType == CutsceneType.Image)
+            {
+                cutsceneController.PlayImageCutscene(cutscene, () => cutsceneFinished = true);
+            }
+            else if (cutscene.cutsceneType == CutsceneType.Video)
+            {
+                cutsceneController.PlayVideoCutscene(cutscene, () => cutsceneFinished = true);
+            }
+
+            // รอจนกว่า Cutscene จะเล่นจบ
+            while (!cutsceneFinished)
+                yield return null;
+        }
+
+        onComplete?.Invoke();
     }
 }
