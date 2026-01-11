@@ -75,19 +75,19 @@ public class DetectiveBoardManager : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.B) && Time.timeSinceLevelLoad > 0.1f)
-        {
-            if (isnowPaused)
-            {
-                CloseUI();
-                ResumeGame();
-            }
-            else
-            {
-                PauseGame();
-                OpenUI();
-            }
-        }
+        // if (Input.GetKeyDown(KeyCode.B) && Time.timeSinceLevelLoad > 0.1f)
+        // {
+        //     if (isnowPaused)
+        //     {
+        //         CloseUI();
+        //         ResumeGame();
+        //     }
+        //     else
+        //     {
+        //         PauseGame();
+        //         OpenUI();
+        //     }
+        // }
     }
 
     public void PauseGame()

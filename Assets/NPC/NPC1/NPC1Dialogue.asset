@@ -43,3 +43,14 @@ MonoBehaviour:
   - dialogueIndex: 6
     statementIDs:
     - 0002
+  cutsceneEvents:
+  - cutsceneType: 2
+    timing: 2
+    dialogueIndex: 0
+    cutsceneImage: {fileID: 0}
+    imageDuration: 0
+    videoClip: {fileID: 32900000, guid: 0e99d179b570cd94c8f8bcee5246bc97, type: 3}
+    canSkipVideo: 0
+    useFadeIn: 1
+    useFadeOut: 1
+    fadeDuration: 2
