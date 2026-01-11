@@ -16,10 +16,6 @@ MonoBehaviour:
   npcPortrait: {fileID: 0}
   leftPortrait: {fileID: 21300000, guid: 2acfde706dec7cb45a0295e4098aee33, type: 3}
   rightPortrait: {fileID: 21300000, guid: 3778434aa7bc39e48b914a4f6cd6d5e1, type: 3}
-  useCutscene: 1
-  cutsceneImage: {fileID: 21300000, guid: e61c3c15fff213248817d225aeb01c8d, type: 3}
-  cutsceneDuration: 2
-  cutsceneFadeDuration: 0.5
   dialogueLines:
   - "\u0E1A\u0E17\u0E1E\u0E39\u0E14\u0E46"
   - "\u0E1A\u0E17\u0E1E\u0E39\u0E14\u0E46"
@@ -31,3 +27,14 @@ MonoBehaviour:
   endDialogueLine: 000001
   choices: []
   statementUnlocks: []
+  cutsceneEvents:
+  - cutsceneType: 1
+    timing: 0
+    dialogueIndex: 0
+    cutsceneImage: {fileID: 21300000, guid: e61c3c15fff213248817d225aeb01c8d, type: 3}
+    imageDuration: 3
+    videoClip: {fileID: 0}
+    canSkipVideo: 0
+    useFadeIn: 1
+    useFadeOut: 1
+    fadeDuration: 0.5
