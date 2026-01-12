@@ -2722,7 +2722,7 @@ BoxCollider:
   m_LayerOverridePriority: 0
   m_IsTrigger: 1
   m_ProvidesContacts: 0
-  m_Enabled: 0
+  m_Enabled: 1
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
@@ -2812,7 +2812,9 @@ MonoBehaviour:
   CutsceneImage: {fileID: 1370626921}
   CutsceneCanvasGroup: {fileID: 733515745}
   CutscenePlayed: 0
-  FadeDuration: 1
+  FadeInDuration: 1
+  FadeOutDuration: 1
+  CutsceneDuration: 3
 --- !u!1 &953496555 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 5050422055867433376, guid: 3f7ec3be54da9c741b1754c8f787ccb8, type: 3}

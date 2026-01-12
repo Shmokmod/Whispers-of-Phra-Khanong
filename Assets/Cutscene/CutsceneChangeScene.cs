@@ -10,8 +10,11 @@ public class CutsceneChangeScene : MonoBehaviour
     {
         if (videoPlayer != null)
         {
+            // สมัครรับฟังเหตุการณ์เมื่อวิดีโอเล่นจบ
+            Debug.Log("สมัครรับฟังเหตุการณ์ videoPlayer.loopPointReached");
             videoPlayer.loopPointReached += OnVideoFinished;
             // เริ่มเล่นวิดีโอ (ถ้ายังไม่ได้เล่น)
+            Debug.Log("เริ่มเล่น Cutscene");
             videoPlayer.Play();
         }
         else
@@ -32,6 +35,7 @@ public class CutsceneChangeScene : MonoBehaviour
         if (videoPlayer != null)
         {
             videoPlayer.loopPointReached -= OnVideoFinished;
+            
         }
     }
 }
