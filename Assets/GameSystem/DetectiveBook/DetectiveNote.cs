@@ -1,0 +1,45 @@
+﻿using UnityEngine;
+
+[CreateAssetMenu(fileName = "New Detective Note", menuName = "Detective/Note")]
+public class DetectiveNote : ScriptableObject
+{
+    [Header("Note Info")]
+    public string noteID; // ต้องไม่ซ้ำกัน เช่น "note_suspect_01"
+    public string title = "หัวข้อเบาะแส";
+
+    [TextArea(5, 10)]
+    public string content = "รายละเอียดเบาะแส...";
+
+    [Header("Display Order")]
+    [Tooltip("ลำดับการแสดง (เรียงจากน้อยไปมาก)")]
+    public int orderIndex = 0;
+
+    [Header("Visual")]
+    [Tooltip("รูปภาพประกอบ (Optional)")]
+    public Sprite noteImage;
+
+    [Header("Unlock Conditions")]
+    [Tooltip("เงื่อนไขทั้งหมดต้องเป็นจริง (AND logic)")]
+    public UnlockCondition[] unlockConditions;
+}
+
+[System.Serializable]
+public class UnlockCondition
+{
+    public enum ConditionType
+    {
+        DialogueReached,    // ถึงบรรทัด dialogue ที่กำหนด
+        EvidenceUnlocked,   // ได้ evidence
+        StatementUnlocked,  // ได้ statement
+        NoteUnlocked        // note อื่นถูก unlock
+    }
+
+    [Header("Condition Settings")]
+    public ConditionType type;
+
+    [Tooltip("ใส่ ID ตามประเภท: dialogueID, evidenceID, statementID, noteID")]
+    public string targetID;
+
+    [Tooltip("(เฉพาะ DialogueReached) ระบุ index บรรทัด")]
+    public int dialogueIndex = -1;
+}

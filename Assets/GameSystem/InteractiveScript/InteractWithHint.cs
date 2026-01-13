@@ -10,7 +10,7 @@ public class InteractWithHint : MonoBehaviour, IInteractable
     public GameObject GotItemUI;
 
     [Header("Evidence to Unlock")]
-    public string[] evidenceIDsToUnlock; // ✅ เพิ่มตรงนี้
+    public string[] evidenceIDsToUnlock;
 
     void Start()
     {
@@ -56,7 +56,7 @@ public class InteractWithHint : MonoBehaviour, IInteractable
             EvidenceData evid = GameDataRuntime.Instance.GetEvidence(evidID);
             if (evid != null)
             {
-                evid.isUnlocked = true; // ✅ Unlock
+                evid.isUnlocked = true;
                 GameDataRuntime.Instance.SaveUnlockedEvidence(evidID);
                 Debug.Log($"✅ Evidence Unlocked: {evidID}");
             }
@@ -64,6 +64,12 @@ public class InteractWithHint : MonoBehaviour, IInteractable
             {
                 Debug.LogWarning($"❌ Evidence ไม่พบ: {evidID}");
             }
+        }
+
+        // ✅ เพิ่ม: ลองปลดล็อก Detective Notes หลังได้ evidence
+        if (DetectiveBookManager.Instance != null)
+        {
+            DetectiveBookManager.Instance.TryUnlockNotes();
         }
     }
 

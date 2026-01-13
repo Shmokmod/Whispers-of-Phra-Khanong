@@ -7,6 +7,10 @@ using System.Linq;
 
 public class NPC : MonoBehaviour, IInteractable
 {
+
+    [Header("Detective Book Integration")]
+    public string dialogueID; // เช่น "npc_guard"
+
     public NPCdialogue dialogueData;
     private DialogueController dialogueUI;
     private CutsceneController cutsceneController;
@@ -227,6 +231,12 @@ public class NPC : MonoBehaviour, IInteractable
     {
         StopAllCoroutines();
 
+        // ✅ เพิ่ม
+        if (!string.IsNullOrEmpty(dialogueID) && DetectiveBookManager.Instance != null)
+        {
+            DetectiveBookManager.Instance.MarkDialogueReached(dialogueID, dialogueIndex);
+        }
+
         bool useTwoPortraits = (dialogueData.leftPortrait != null && dialogueData.rightPortrait != null);
 
         if (useTwoPortraits && dialogueData.speakerPerLine != null &&
@@ -295,6 +305,12 @@ public class NPC : MonoBehaviour, IInteractable
                     Debug.LogWarning($"⚠️ ID '{id}' ไม่พบใน Statement หรือ Evidence");
                 }
             }
+
+            // ✅ เพิ่มบรรทัดนี้
+            if (DetectiveBookManager.Instance != null)
+            {
+                DetectiveBookManager.Instance.TryUnlockNotes();
+            }
         }
     }
 
@@ -319,6 +335,11 @@ public class NPC : MonoBehaviour, IInteractable
                     else
                     {
                         Debug.LogWarning($"⚠️ ID '{id}' ไม่พบใน Statement หรือ Evidence");
+                    }
+
+                    if (DetectiveBookManager.Instance != null)
+                    {
+                        DetectiveBookManager.Instance.TryUnlockNotes();
                     }
                 }
             }
