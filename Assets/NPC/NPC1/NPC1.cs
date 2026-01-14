@@ -7,7 +7,6 @@ using System.Linq;
 
 public class NPC : MonoBehaviour, IInteractable
 {
-
     [Header("Detective Book Integration")]
     public string dialogueID; // เช่น "npc_guard"
 
@@ -288,29 +287,48 @@ public class NPC : MonoBehaviour, IInteractable
 
         DisplayCurrentLine();
 
-        if (choice.statementToUnlock != null && choice.statementToUnlock.Length > 0)
+        // ✅ แก้ใหม่: รองรับการ unlock Note แต่ละ choice
+        if (choice.statementToUnlock != null && choiceIndex < choice.statementToUnlock.Length)
         {
-            foreach (string id in choice.statementToUnlock)
-            {
-                if (GameDataRuntime.Instance.GetStatement(id) != null)
-                {
-                    GameDataRuntime.Instance.UnlockAndSaveStatement(id);
-                }
-                else if (GameDataRuntime.Instance.GetEvidence(id) != null)
-                {
-                    GameDataRuntime.Instance.UnlockAndSaveEvidence(id);
-                }
-                else
-                {
-                    Debug.LogWarning($"⚠️ ID '{id}' ไม่พบใน Statement หรือ Evidence");
-                }
-            }
+            string idToUnlock = choice.statementToUnlock[choiceIndex];
 
-            // ✅ เพิ่มบรรทัดนี้
-            if (DetectiveBookManager.Instance != null)
+            if (!string.IsNullOrEmpty(idToUnlock))
             {
-                DetectiveBookManager.Instance.TryUnlockNotes();
+                Debug.Log($"🎯 Trying to unlock: {idToUnlock} (from choice {choiceIndex})");
+
+                // ลอง unlock Statement
+                if (GameDataRuntime.Instance.GetStatement(idToUnlock) != null)
+                {
+                    GameDataRuntime.Instance.UnlockAndSaveStatement(idToUnlock);
+                    Debug.Log($"✅ Statement Unlocked: {idToUnlock}");
+                }
+                // ลอง unlock Evidence
+                else if (GameDataRuntime.Instance.GetEvidence(idToUnlock) != null)
+                {
+                    GameDataRuntime.Instance.UnlockAndSaveEvidence(idToUnlock);
+                    Debug.Log($"✅ Evidence Unlocked: {idToUnlock}");
+                }
+                // ✅ ลอง unlock Note โดยตรง
+                else if (DetectiveBookManager.Instance != null)
+                {
+                    var note = DetectiveBookManager.Instance.GetNote(idToUnlock);
+                    if (note != null)
+                    {
+                        DetectiveBookManager.Instance.UnlockNote(idToUnlock);
+                        Debug.Log($"✅ Note Unlocked from Choice: {idToUnlock}");
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"⚠️ ID '{idToUnlock}' ไม่พบใน Statement, Evidence หรือ Note");
+                    }
+                }
             }
+        }
+
+        // ลองปลดล็อก notes อื่นที่รอเงื่อนไข
+        if (DetectiveBookManager.Instance != null)
+        {
+            DetectiveBookManager.Instance.TryUnlockNotes();
         }
     }
 
@@ -336,11 +354,12 @@ public class NPC : MonoBehaviour, IInteractable
                     {
                         Debug.LogWarning($"⚠️ ID '{id}' ไม่พบใน Statement หรือ Evidence");
                     }
+                }
 
-                    if (DetectiveBookManager.Instance != null)
-                    {
-                        DetectiveBookManager.Instance.TryUnlockNotes();
-                    }
+                // ✅ ย้ายออกมาข้างนอก loop
+                if (DetectiveBookManager.Instance != null)
+                {
+                    DetectiveBookManager.Instance.TryUnlockNotes();
                 }
             }
         }

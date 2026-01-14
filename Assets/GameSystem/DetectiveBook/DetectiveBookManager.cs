@@ -37,16 +37,37 @@ public class DetectiveBookManager : MonoBehaviour
 
     public void TryUnlockNotes()
     {
-        if (allNotes == null || allNotes.Length == 0) return;
+        if (allNotes == null || allNotes.Length == 0)
+        {
+            Debug.LogWarning("⚠️ All Notes is empty! ไม่มี Note ใน Manager");
+            return;
+        }
+
+        Debug.Log($"🔍 Checking {allNotes.Length} notes...");
 
         foreach (var note in allNotes)
         {
-            if (note == null) continue;
-            if (IsNoteUnlocked(note.noteID)) continue; // ปลดล็อกแล้ว
+            if (note == null)
+            {
+                Debug.LogWarning("⚠️ Note is NULL in array!");
+                continue;
+            }
+
+            if (IsNoteUnlocked(note.noteID))
+            {
+                Debug.Log($"✅ Note '{note.noteID}' already unlocked, skip.");
+                continue;
+            }
+
+            Debug.Log($"🔎 Checking note: {note.noteID}");
 
             if (CheckAllConditions(note))
             {
                 UnlockNote(note.noteID);
+            }
+            else
+            {
+                Debug.Log($"❌ Note '{note.noteID}' conditions NOT met.");
             }
         }
     }
@@ -71,20 +92,29 @@ public class DetectiveBookManager : MonoBehaviour
         {
             case UnlockCondition.ConditionType.DialogueReached:
                 string key = $"{condition.targetID}_{condition.dialogueIndex}";
-                return reachedDialogueKeys.Contains(key);
+                bool hasKey = reachedDialogueKeys.Contains(key);
+                Debug.Log($"  📋 Check DialogueReached: '{key}' → {(hasKey ? "✅ PASS" : "❌ FAIL")}");
+                return hasKey;
 
             case UnlockCondition.ConditionType.EvidenceUnlocked:
                 var evidence = GameDataRuntime.Instance.GetEvidence(condition.targetID);
-                return evidence != null && evidence.isUnlocked;
+                bool evidUnlocked = evidence != null && evidence.isUnlocked;
+                Debug.Log($"  📋 Check Evidence: '{condition.targetID}' → {(evidUnlocked ? "✅ PASS" : "❌ FAIL")}");
+                return evidUnlocked;
 
             case UnlockCondition.ConditionType.StatementUnlocked:
                 var statement = GameDataRuntime.Instance.GetStatement(condition.targetID);
-                return statement != null && statement.isUnlocked;
+                bool stmtUnlocked = statement != null && statement.isUnlocked;
+                Debug.Log($"  📋 Check Statement: '{condition.targetID}' → {(stmtUnlocked ? "✅ PASS" : "❌ FAIL")}");
+                return stmtUnlocked;
 
             case UnlockCondition.ConditionType.NoteUnlocked:
-                return IsNoteUnlocked(condition.targetID);
+                bool noteUnlocked = IsNoteUnlocked(condition.targetID);
+                Debug.Log($"  📋 Check Note: '{condition.targetID}' → {(noteUnlocked ? "✅ PASS" : "❌ FAIL")}");
+                return noteUnlocked;
 
             default:
+                Debug.LogWarning($"  ⚠️ Unknown condition type: {condition.type}");
                 return false;
         }
     }
