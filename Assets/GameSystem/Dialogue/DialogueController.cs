@@ -295,4 +295,11 @@ public class DialogueController : MonoBehaviour
 
         return choiceButton;
     }
+
+    // ใส่ไว้ท้ายคลาส DialogueController
+public void ResumeDialogue()
+{
+    ShowDialogue(true);
+}
+
 }

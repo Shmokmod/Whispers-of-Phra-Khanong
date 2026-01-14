@@ -1,43 +1,67 @@
-﻿using System.Collections;
-using TMPro;
-using UnityEngine;
-using UnityEngine.UI;
-using GameSystem;
+﻿// ===============================
+// NPC.cs
+// ระบบ NPC Dialogue + Choice + Cutscene + Detective Book
+// ===============================
+
+using System.Collections;
 using System.Linq;
+using UnityEngine;
+using GameSystem;
 
 public class NPC : MonoBehaviour, IInteractable
 {
     [Header("Detective Book Integration")]
-    public string dialogueID; // เช่น "npc_guard"
+    [Tooltip("ID ของ Dialogue ใช้กับ DetectiveBook (เช่น npc_guard)")]
+    public string dialogueID;
 
+    [Header("Dialogue Data")]
     public NPCdialogue dialogueData;
-    private DialogueController dialogueUI;
-    private CutsceneController cutsceneController;
-    private int dialogueIndex;
-    private bool isTyping, isDialogueActive;
-    private Animator animator;
 
+    [Header("Visual")]
     [SerializeField] private Sprite defaultSprite;
 
+    // Controllers
+    private DialogueController dialogueUI;
+    private CutsceneController cutsceneController;
+    private Animator animator;
+
+    // Runtime State
+    private int dialogueIndex;
+    private bool isTyping;
+    private bool isDialogueActive;
+
+    // ===============================
+    // IInteractable
+    // ===============================
     public bool CanInteract()
     {
         return !isDialogueActive && !CutsceneController.instance.IsPlayingCutscene();
     }
 
-    void Start()
+    // ===============================
+    // Unity Lifecycle
+    // ===============================
+    private void Start()
     {
         dialogueUI = DialogueController.instance;
         cutsceneController = CutsceneController.instance;
         animator = GetComponent<Animator>();
 
-        if (dialogueUI.npcPortraitImage != null && dialogueUI.npcPortraitImage.sprite == null)
+        // ตั้ง sprite เริ่มต้น
+        if (dialogueUI.npcPortraitImage != null &&
+            dialogueUI.npcPortraitImage.sprite == null)
+        {
             dialogueUI.npcPortraitImage.sprite = defaultSprite;
+        }
     }
 
+    // ===============================
+    // Interaction
+    // ===============================
     public void Interact()
     {
-        if (dialogueData == null || (PauseController.isPaused && !isDialogueActive))
-            return;
+        if (dialogueData == null) return;
+        if (PauseController.isPaused && !isDialogueActive) return;
 
         if (isDialogueActive)
             NextLine();
@@ -45,17 +69,16 @@ public class NPC : MonoBehaviour, IInteractable
             StartDialogue();
     }
 
-    void StartDialogue()
+    // ===============================
+    // Dialogue Flow
+    // ===============================
+    private void StartDialogue()
     {
-        // ✅ เช็ค Cutscene ก่อนเริ่ม Dialogue
+        // Cutscene ก่อนเริ่มบทสนทนา
         var beforeCutscenes = GetCutscenesByTiming(CutsceneTiming.BeforeDialogue);
-
         if (beforeCutscenes.Length > 0)
         {
-            PlayCutscenesSequentially(beforeCutscenes, () =>
-            {
-                InitializeDialogue();
-            });
+            PlayCutscenesSequentially(beforeCutscenes, InitializeDialogue);
         }
         else
         {
@@ -63,25 +86,12 @@ public class NPC : MonoBehaviour, IInteractable
         }
     }
 
-    void InitializeDialogue()
+    private void InitializeDialogue()
     {
         isDialogueActive = true;
         dialogueIndex = 0;
 
-        bool useTwoPortraits = (dialogueData.leftPortrait != null && dialogueData.rightPortrait != null);
-
-        if (useTwoPortraits)
-        {
-            dialogueUI.SetupPortraits(dialogueData.leftPortrait, dialogueData.rightPortrait);
-        }
-        else
-        {
-            Sprite portrait = dialogueData.npcPortrait != null ? dialogueData.npcPortrait : defaultSprite;
-            dialogueUI.SetNPCinfo(dialogueData.npcName, portrait);
-            dialogueUI.npcPortraitImage.SetNativeSize();
-            dialogueUI.npcPortraitImage.gameObject.SetActive(true);
-        }
-
+        SetupPortraits();
         dialogueUI.ShowDialogue(true);
 
         PauseController.isPaused = true;
@@ -90,8 +100,9 @@ public class NPC : MonoBehaviour, IInteractable
         DisplayCurrentLine();
     }
 
-    void NextLine()
+    private void NextLine()
     {
+        // กดข้าม typing
         if (isTyping)
         {
             StopAllCoroutines();
@@ -101,54 +112,22 @@ public class NPC : MonoBehaviour, IInteractable
         }
 
         // จบบท
-        if (dialogueData.endDialogueLine != null &&
-            dialogueData.endDialogueLine.Length > dialogueIndex &&
-            dialogueData.endDialogueLine[dialogueIndex])
+        if (IsEndDialogueLine())
         {
             EndDialogue();
             return;
         }
 
         // ตัวเลือก
-        if (dialogueData.choices != null && dialogueData.choices.Length > 0)
-        {
-            foreach (DialogueChoice dialogueChoice in dialogueData.choices)
-            {
-                if (dialogueChoice.dialogueIndex == dialogueIndex)
-                {
-                    dialogueUI.ClearChoices();
-                    DisplayChoices(dialogueChoice);
-                    return;
-                }
-            }
-        }
+        if (TryDisplayChoices())
+            return;
 
         dialogueUI.ClearChoices();
         dialogueIndex++;
 
         if (dialogueIndex < dialogueData.dialogueLines.Length)
         {
-            // ✅ เช็ค Cutscene ที่ตำแหน่งนี้
-            var cutscenes = GetCutscenesByDialogueIndex(dialogueIndex);
-
-            if (cutscenes.Length > 0)
-            {
-                // ปิด Dialogue ชั่วคราว
-                dialogueUI.ShowDialogue(false);
-
-                PlayCutscenesSequentially(cutscenes, () =>
-                {
-                    // เปิด Dialogue กลับมา
-                    dialogueUI.ShowDialogue(true);
-                    DisplayCurrentLine();
-                    CheckUnlockByDialogueIndex();
-                });
-            }
-            else
-            {
-                DisplayCurrentLine();
-                CheckUnlockByDialogueIndex();
-            }
+            HandleDialogueCutsceneOrContinue();
         }
         else
         {
@@ -156,7 +135,24 @@ public class NPC : MonoBehaviour, IInteractable
         }
     }
 
-    IEnumerator TypeLine()
+    // ===============================
+    // Dialogue Display
+    // ===============================
+    private void DisplayCurrentLine()
+    {
+        StopAllCoroutines();
+
+        // แจ้ง DetectiveBook ว่าถึง dialogue index นี้แล้ว
+        if (!string.IsNullOrEmpty(dialogueID))
+        {
+            DetectiveBookManager.Instance?.MarkDialogueReached(dialogueID, dialogueIndex);
+        }
+
+        SetupSpeaker();
+        StartCoroutine(TypeLine());
+    }
+
+    private IEnumerator TypeLine()
     {
         isTyping = true;
         dialogueUI.SetDialogueText("");
@@ -169,6 +165,7 @@ public class NPC : MonoBehaviour, IInteractable
 
         isTyping = false;
 
+        // auto progress
         if (dialogueData.autoProgressLine != null &&
             dialogueData.autoProgressLine.Length > dialogueIndex &&
             dialogueData.autoProgressLine[dialogueIndex])
@@ -178,20 +175,16 @@ public class NPC : MonoBehaviour, IInteractable
         }
     }
 
-    public void EndDialogue()
+    // ===============================
+    // End Dialogue
+    // ===============================
+    private void EndDialogue()
     {
-        // ✅ เช็ค Cutscene หลังจบ Dialogue
         var afterCutscenes = GetCutscenesByTiming(CutsceneTiming.AfterDialogue);
-
         if (afterCutscenes.Length > 0)
         {
-            // ปิด Dialogue UI ก่อน
             CloseDialogueUI();
-
-            PlayCutscenesSequentially(afterCutscenes, () =>
-            {
-                FinishDialogue();
-            });
+            PlayCutscenesSequentially(afterCutscenes, FinishDialogue);
         }
         else
         {
@@ -200,7 +193,7 @@ public class NPC : MonoBehaviour, IInteractable
         }
     }
 
-    void CloseDialogueUI()
+    private void CloseDialogueUI()
     {
         StopAllCoroutines();
         isDialogueActive = false;
@@ -209,165 +202,192 @@ public class NPC : MonoBehaviour, IInteractable
         dialogueUI.ClearChoices();
 
         if (dialogueData.leftPortrait != null && dialogueData.rightPortrait != null)
-        {
             dialogueUI.HideAllPortraits();
-        }
         else
-        {
             dialogueUI.npcPortraitImage.gameObject.SetActive(false);
-        }
 
         dialogueUI.ShowDialogue(false);
     }
 
-    void FinishDialogue()
+    private void FinishDialogue()
     {
         PauseController.isPaused = false;
         Time.timeScale = 1f;
     }
 
-    void DisplayCurrentLine()
+    // ===============================
+    // Helpers
+    // ===============================
+    private void SetupPortraits()
     {
-        StopAllCoroutines();
+        bool twoPortraits =
+            dialogueData.leftPortrait != null &&
+            dialogueData.rightPortrait != null;
 
-        // ✅ เพิ่ม
-        if (!string.IsNullOrEmpty(dialogueID) && DetectiveBookManager.Instance != null)
+        if (twoPortraits)
         {
-            DetectiveBookManager.Instance.MarkDialogueReached(dialogueID, dialogueIndex);
+            dialogueUI.SetupPortraits(
+                dialogueData.leftPortrait,
+                dialogueData.rightPortrait
+            );
         }
+        else
+        {
+            Sprite portrait =
+                dialogueData.npcPortrait != null
+                ? dialogueData.npcPortrait
+                : defaultSprite;
 
-        bool useTwoPortraits = (dialogueData.leftPortrait != null && dialogueData.rightPortrait != null);
+            dialogueUI.SetNPCinfo(dialogueData.npcName, portrait);
+            dialogueUI.npcPortraitImage.SetNativeSize();
+            dialogueUI.npcPortraitImage.gameObject.SetActive(true);
+        }
+    }
 
-        if (useTwoPortraits && dialogueData.speakerPerLine != null &&
+    private void SetupSpeaker()
+    {
+        bool twoPortraits =
+            dialogueData.leftPortrait != null &&
+            dialogueData.rightPortrait != null;
+
+        if (twoPortraits &&
+            dialogueData.speakerPerLine != null &&
             dialogueIndex < dialogueData.speakerPerLine.Length)
         {
-            SpeakerPosition speaker = dialogueData.speakerPerLine[dialogueIndex];
+            var speaker = dialogueData.speakerPerLine[dialogueIndex];
             dialogueUI.SetActiveSpeaker(speaker);
-
-            string speakerName = GetSpeakerName(speaker);
-            dialogueUI.SetSpeakerName(speakerName);
+            dialogueUI.SetSpeakerName(GetSpeakerName(speaker));
         }
         else
         {
             dialogueUI.SetSpeakerName(dialogueData.npcName);
         }
-
-        StartCoroutine(TypeLine());
     }
 
-    string GetSpeakerName(SpeakerPosition position)
+    private bool IsEndDialogueLine()
     {
-        switch (position)
+        return dialogueData.endDialogueLine != null &&
+               dialogueData.endDialogueLine.Length > dialogueIndex &&
+               dialogueData.endDialogueLine[dialogueIndex];
+    }
+
+    private bool TryDisplayChoices()
+    {
+        if (dialogueData.choices == null) return false;
+
+        foreach (var choice in dialogueData.choices)
         {
-            case SpeakerPosition.Left:
-                return "ตัวละคร A";
-            case SpeakerPosition.Right:
-                return "ตัวละคร B";
-            default:
-                return dialogueData.npcName;
+            if (choice.dialogueIndex == dialogueIndex)
+            {
+                dialogueUI.ClearChoices();
+                DisplayChoices(choice);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void HandleDialogueCutsceneOrContinue()
+    {
+        var cutscenes = GetCutscenesByDialogueIndex(dialogueIndex);
+        if (cutscenes.Length > 0)
+        {
+            dialogueUI.ShowDialogue(false);
+            PlayCutscenesSequentially(cutscenes, () =>
+            {
+                dialogueUI.ShowDialogue(true);
+                DisplayCurrentLine();
+                CheckUnlockByDialogueIndex();
+            });
+        }
+        else
+        {
+            DisplayCurrentLine();
+            CheckUnlockByDialogueIndex();
         }
     }
 
-    void DisplayChoices(DialogueChoice choice)
+    private string GetSpeakerName(SpeakerPosition position)
+    {
+        return position switch
+        {
+            SpeakerPosition.Left => "ตัวละคร A",
+            SpeakerPosition.Right => "ตัวละคร B",
+            _ => dialogueData.npcName
+        };
+    }
+
+    // ===============================
+    // Choices
+    // ===============================
+    private void DisplayChoices(DialogueChoice choice)
     {
         for (int i = 0; i < choice.choice.Length; i++)
         {
+            int index = i;
             int nextIndex = choice.nextDialogueIndex[i];
-            int choiceIndex = i;
 
-            dialogueUI.CreateChoiceButton(choice.choice[i],
-                () => ChooseOption(choice, choiceIndex, nextIndex));
+            dialogueUI.CreateChoiceButton(
+                choice.choice[i],
+                () => ChooseOption(choice, index, nextIndex)
+            );
         }
     }
 
-    void ChooseOption(DialogueChoice choice, int choiceIndex, int nextIndex)
+    private void ChooseOption(DialogueChoice choice, int choiceIndex, int nextIndex)
     {
         dialogueUI.ClearChoices();
         dialogueIndex = nextIndex;
-
         DisplayCurrentLine();
 
-        // ✅ แก้ใหม่: รองรับการ unlock Note แต่ละ choice
-        if (choice.statementToUnlock != null && choiceIndex < choice.statementToUnlock.Length)
-        {
-            string idToUnlock = choice.statementToUnlock[choiceIndex];
-
-            if (!string.IsNullOrEmpty(idToUnlock))
-            {
-                Debug.Log($"🎯 Trying to unlock: {idToUnlock} (from choice {choiceIndex})");
-
-                // ลอง unlock Statement
-                if (GameDataRuntime.Instance.GetStatement(idToUnlock) != null)
-                {
-                    GameDataRuntime.Instance.UnlockAndSaveStatement(idToUnlock);
-                    Debug.Log($"✅ Statement Unlocked: {idToUnlock}");
-                }
-                // ลอง unlock Evidence
-                else if (GameDataRuntime.Instance.GetEvidence(idToUnlock) != null)
-                {
-                    GameDataRuntime.Instance.UnlockAndSaveEvidence(idToUnlock);
-                    Debug.Log($"✅ Evidence Unlocked: {idToUnlock}");
-                }
-                // ✅ ลอง unlock Note โดยตรง
-                else if (DetectiveBookManager.Instance != null)
-                {
-                    var note = DetectiveBookManager.Instance.GetNote(idToUnlock);
-                    if (note != null)
-                    {
-                        DetectiveBookManager.Instance.UnlockNote(idToUnlock);
-                        Debug.Log($"✅ Note Unlocked from Choice: {idToUnlock}");
-                    }
-                    else
-                    {
-                        Debug.LogWarning($"⚠️ ID '{idToUnlock}' ไม่พบใน Statement, Evidence หรือ Note");
-                    }
-                }
-            }
-        }
-
-        // ลองปลดล็อก notes อื่นที่รอเงื่อนไข
-        if (DetectiveBookManager.Instance != null)
-        {
-            DetectiveBookManager.Instance.TryUnlockNotes();
-        }
+        UnlockFromChoice(choice, choiceIndex);
+        DetectiveBookManager.Instance?.TryUnlockNotes();
     }
 
-    void CheckUnlockByDialogueIndex()
+    private void UnlockFromChoice(DialogueChoice choice, int choiceIndex)
+    {
+        if (choice.statementToUnlock == null ||
+            choiceIndex >= choice.statementToUnlock.Length)
+            return;
+
+        string id = choice.statementToUnlock[choiceIndex];
+        if (string.IsNullOrEmpty(id)) return;
+
+        if (GameDataRuntime.Instance.GetStatement(id) != null)
+            GameDataRuntime.Instance.UnlockAndSaveStatement(id);
+        else if (GameDataRuntime.Instance.GetEvidence(id) != null)
+            GameDataRuntime.Instance.UnlockAndSaveEvidence(id);
+        else
+            DetectiveBookManager.Instance?.UnlockNote(id);
+    }
+
+    // ===============================
+    // Dialogue Index Unlock
+    // ===============================
+    private void CheckUnlockByDialogueIndex()
     {
         if (dialogueData.statementUnlocks == null) return;
 
         foreach (var cond in dialogueData.statementUnlocks)
         {
-            if (cond.dialogueIndex == dialogueIndex)
-            {
-                foreach (string id in cond.statementIDs)
-                {
-                    if (GameDataRuntime.Instance.GetStatement(id) != null)
-                    {
-                        GameDataRuntime.Instance.UnlockAndSaveStatement(id);
-                    }
-                    else if (GameDataRuntime.Instance.GetEvidence(id) != null)
-                    {
-                        GameDataRuntime.Instance.UnlockAndSaveEvidence(id);
-                    }
-                    else
-                    {
-                        Debug.LogWarning($"⚠️ ID '{id}' ไม่พบใน Statement หรือ Evidence");
-                    }
-                }
+            if (cond.dialogueIndex != dialogueIndex) continue;
 
-                // ✅ ย้ายออกมาข้างนอก loop
-                if (DetectiveBookManager.Instance != null)
-                {
-                    DetectiveBookManager.Instance.TryUnlockNotes();
-                }
+            foreach (string id in cond.statementIDs)
+            {
+                if (GameDataRuntime.Instance.GetStatement(id) != null)
+                    GameDataRuntime.Instance.UnlockAndSaveStatement(id);
+                else if (GameDataRuntime.Instance.GetEvidence(id) != null)
+                    GameDataRuntime.Instance.UnlockAndSaveEvidence(id);
             }
+
+            DetectiveBookManager.Instance?.TryUnlockNotes();
         }
     }
 
-    // ==================== Cutscene Helpers ====================
-
-    CutsceneEvent[] GetCutscenesByTiming(CutsceneTiming timing)
+    // ===============================
+    // Cutscene Helpers
+    // ===============================
+    private CutsceneEvent[] GetCutscenesByTiming(CutsceneTiming timing)
     {
         if (dialogueData.cutsceneEvents == null)
             return new CutsceneEvent[0];
@@ -377,38 +397,39 @@ public class NPC : MonoBehaviour, IInteractable
             .ToArray();
     }
 
-    CutsceneEvent[] GetCutscenesByDialogueIndex(int index)
+    private CutsceneEvent[] GetCutscenesByDialogueIndex(int index)
     {
         if (dialogueData.cutsceneEvents == null)
             return new CutsceneEvent[0];
 
         return dialogueData.cutsceneEvents
-            .Where(c => c.timing == CutsceneTiming.AtDialogueIndex && c.dialogueIndex == index)
+            .Where(c =>
+                c.timing == CutsceneTiming.AtDialogueIndex &&
+                c.dialogueIndex == index)
             .ToArray();
     }
 
-    void PlayCutscenesSequentially(CutsceneEvent[] cutscenes, System.Action onComplete)
+    private void PlayCutscenesSequentially(
+        CutsceneEvent[] cutscenes,
+        System.Action onComplete)
     {
         StartCoroutine(PlayCutscenesRoutine(cutscenes, onComplete));
     }
 
-    IEnumerator PlayCutscenesRoutine(CutsceneEvent[] cutscenes, System.Action onComplete)
+    private IEnumerator PlayCutscenesRoutine(
+        CutsceneEvent[] cutscenes,
+        System.Action onComplete)
     {
         foreach (var cutscene in cutscenes)
         {
-            bool cutsceneFinished = false;
+            bool finished = false;
 
             if (cutscene.cutsceneType == CutsceneType.Image)
-            {
-                cutsceneController.PlayImageCutscene(cutscene, () => cutsceneFinished = true);
-            }
+                cutsceneController.PlayImageCutscene(cutscene, () => finished = true);
             else if (cutscene.cutsceneType == CutsceneType.Video)
-            {
-                cutsceneController.PlayVideoCutscene(cutscene, () => cutsceneFinished = true);
-            }
+                cutsceneController.PlayVideoCutscene(cutscene, () => finished = true);
 
-            // รอจนกว่า Cutscene จะเล่นจบ
-            while (!cutsceneFinished)
+            while (!finished)
                 yield return null;
         }
 

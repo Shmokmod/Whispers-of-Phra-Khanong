@@ -42,7 +42,7 @@ MonoBehaviour:
     timing: 0
     dialogueIndex: 0
     cutsceneImage: {fileID: 0}
-    imageDuration: 4
+    imageDuration: 0
     videoClip: {fileID: 32900000, guid: 6f06f05762bec334c8d6a9c64ed5b822, type: 3}
     canSkipVideo: 1
     useFadeIn: 1
