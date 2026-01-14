@@ -16,7 +16,8 @@ MonoBehaviour:
   title: "\u0E2B\u0E31\u0E27\u0E2B\u0E19\u0E49\u0E32\u0E2A\u0E31\u0E48\u0E07"
   content: "\u0E08\u0E32\u0E01\u0E2A\u0E34\u0E48\u0E07\u0E17\u0E35\u0E48\u0E2B\u0E31\u0E27\u0E2B\u0E19\u0E49\u0E32\u0E2A\u0E31\u0E48\u0E07..."
   orderIndex: 1
+  noteImage: {fileID: 21300000, guid: 31ae8a47158bd6849af91d978a8a042d, type: 3}
   unlockConditions:
   - type: 0
     targetID: Boss-QuestGiving
-    dialogueIndex: 3
+    dialogueIndex: 6

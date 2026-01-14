@@ -3579,6 +3579,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1384299064}
   - component: {fileID: 1384299065}
+  - component: {fileID: 1384299066}
   m_Layer: 0
   m_Name: '#DetectiveBook Manager'
   m_TagString: Untagged
@@ -3615,6 +3616,28 @@ MonoBehaviour:
   m_EditorClassIdentifier: '::'
   allNotes:
   - {fileID: 11400000, guid: 0d1d923651dc2c7409dc95ab890dfe3a, type: 2}
+--- !u!114 &1384299066
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1384299063}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1726b5485dcfa84191ada5729ad7b3e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DetectiveBookUI
+  bookPanel: {fileID: 1772608907}
+  titleText: {fileID: 962813967}
+  contentText: {fileID: 48797064}
+  pageNumberText: {fileID: 1518389521}
+  noteImage: {fileID: 1820331981}
+  prevButton: {fileID: 1821946918}
+  nextButton: {fileID: 666947067}
+  closeButton: {fileID: 662544265}
+  pageFlipSound: {fileID: 8300000, guid: c57b82b93de25a6478cff5cd58a424fb, type: 3}
+  fadeSpeed: 5
 --- !u!1 &1392648757 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 8578709097331664583, guid: c31fead7cf2e52d489d5d9dcb9b448ad, type: 3}
@@ -5463,7 +5486,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1772608908
 RectTransform:
   m_ObjectHideFlags: 0
