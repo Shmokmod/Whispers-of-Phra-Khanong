@@ -2670,7 +2670,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e3aeac15b6bb87645bb20452b9ecf15c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NPC
-  dialogueID: 
+  dialogueID: Soilder-Hint
   dialogueData: {fileID: 11400000, guid: f6d727ef7c6228e409699671beb2bb87, type: 2}
   defaultSprite: {fileID: 0}
 --- !u!65 &1313332093

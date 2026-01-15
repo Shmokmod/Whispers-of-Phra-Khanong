@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using GameSystem;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using GameSystem;
+using UnityEngine.UI;
 
 public class DetectiveBookManager : MonoBehaviour
 {
@@ -17,8 +19,23 @@ public class DetectiveBookManager : MonoBehaviour
     [Header("Events")]
     public System.Action<DetectiveNote> OnNoteUnlocked;
 
+    [Header("Notification UI")]
+    public Canvas NotificationCanvas;
+    public Image NoteIconImage;
+    public float notifyDuration = 2f;
+    public float blinkSpeed = 0.3f;
+    public float fadeTime = 0.3f;
+    public float showTime = 1.5f;
+
+    CanvasGroup canvasGroup;
+
+
     void Awake()
     {
+        canvasGroup = NotificationCanvas.GetComponent<CanvasGroup>();
+        OnNoteUnlocked += ShowNoteNotification;
+
+
         if (Instance == null)
         {
             Instance = this;
@@ -34,6 +51,60 @@ public class DetectiveBookManager : MonoBehaviour
     }
 
     // ==================== Unlock Logic ====================
+
+    void ShowNoteNotification(DetectiveNote note)
+    {
+        StopAllCoroutines();
+        NotificationCanvas.gameObject.SetActive(true);
+        StartCoroutine(FadeRoutine());
+    }
+
+    IEnumerator FadeRoutine()
+    {
+        // Fade In
+        yield return Fade(0f, 1f);
+
+        yield return new WaitForSeconds(showTime);
+
+        // Fade Out
+        yield return Fade(1f, 0f);
+
+        NotificationCanvas.gameObject.SetActive(false);
+    }
+
+    IEnumerator Fade(float from, float to)
+    {
+        float t = 0f;
+        canvasGroup.alpha = from;
+
+        while (t < fadeTime)
+        {
+            t += Time.deltaTime;
+            canvasGroup.alpha = Mathf.Lerp(from, to, t / fadeTime);
+            yield return null;
+        }
+
+        canvasGroup.alpha = to;
+    }
+
+
+    IEnumerator BlinkIcon()
+    {
+        float timer = 0f;
+        bool visible = true;
+
+        while (timer < notifyDuration)
+        {
+            visible = !visible;
+            NoteIconImage.enabled = visible;
+            yield return new WaitForSeconds(blinkSpeed);
+            timer += blinkSpeed;
+        }
+
+        NoteIconImage.enabled = true;
+        NotificationCanvas.gameObject.SetActive(false);
+    }
+
 
     public void TryUnlockNotes()
     {
@@ -84,6 +155,8 @@ public class DetectiveBookManager : MonoBehaviour
         }
 
         return true; // ทุกเงื่อนไขเป็นจริง
+
+        //NewNoteUnlockNotificationUI
     }
 
     bool CheckCondition(UnlockCondition condition)
