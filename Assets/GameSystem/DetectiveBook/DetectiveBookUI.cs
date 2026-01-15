@@ -33,8 +33,16 @@ public class DetectiveBookUI : MonoBehaviour
 
     void Awake()
     {
-        if (Instance == null) Instance = this;
-        else Destroy(gameObject);
+        if (Instance == null)
+        {
+            Instance = this;
+            //DontDestroyOnLoad(gameObject); // ✅ เพิ่มบรรทัดนี้
+        }
+        else
+        {
+            Destroy(gameObject);
+            return;
+        }
 
         audioSource = gameObject.AddComponent<AudioSource>();
         canvasGroup = bookPanel.GetComponent<CanvasGroup>();
@@ -67,7 +75,12 @@ public class DetectiveBookUI : MonoBehaviour
 
     void Update()
     {
-        // กดปุ่ม B เพื่อเปิด/ปิด (เปลี่ยนได้ตามต้องการ)
+        if (bookPanel == null)
+        {
+            Debug.LogError("bookPanel LOST after scene change");
+            return;
+        }
+
         if (Input.GetKeyDown(KeyCode.B))
         {
             if (bookPanel.activeSelf)
@@ -81,6 +94,13 @@ public class DetectiveBookUI : MonoBehaviour
 
     public void OpenBook()
     {
+        // ✅ เช็ค null ทุกอย่างก่อนใช้
+        if (bookPanel == null)
+        {
+            Debug.LogWarning("📘 Cannot open book: bookPanel is null");
+            return;
+        }
+
         RefreshNotesList();
 
         if (unlockedNotes.Count == 0)
@@ -101,6 +121,10 @@ public class DetectiveBookUI : MonoBehaviour
 
     public void CloseBook()
     {
+        // ✅ เช็ค null ก่อนปิด
+        if (bookPanel == null)
+            return;
+
         bookPanel.SetActive(false);
 
         // Unpause game

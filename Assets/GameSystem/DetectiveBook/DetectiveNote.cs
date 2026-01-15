@@ -1,62 +1,45 @@
-﻿// ===============================
-// DetectiveNote.cs
-// ScriptableObject สำหรับเก็บข้อมูล Note ในสมุดนักสืบ
-// ===============================
+﻿using UnityEngine;
 
-using UnityEngine;
-
-[CreateAssetMenu(
-    fileName = "New Detective Note",
-    menuName = "Detective/Note"
-)]
+[CreateAssetMenu(fileName = "New Detective Note", menuName = "Detective/Note")]
 public class DetectiveNote : ScriptableObject
 {
     [Header("Note Info")]
-    [Tooltip("ID ต้องไม่ซ้ำ เช่น note_suspect_01")]
-    public string noteID;
-
-    [Tooltip("ชื่อหัวข้อที่แสดงในสมุดนักสืบ")]
+    public string noteID; // ต้องไม่ซ้ำกัน เช่น "note_suspect_01"
     public string title = "หัวข้อเบาะแส";
 
     [TextArea(5, 10)]
-    [Tooltip("เนื้อหาเบาะแส")]
     public string content = "รายละเอียดเบาะแส...";
 
     [Header("Display Order")]
-    [Tooltip("ลำดับการแสดง (เรียงจากน้อย → มาก)")]
+    [Tooltip("ลำดับการแสดง (เรียงจากน้อยไปมาก)")]
     public int orderIndex = 0;
 
     [Header("Visual")]
-    [Tooltip("รูปภาพประกอบ (ไม่ใส่ก็ได้)")]
+    [Tooltip("รูปภาพประกอบ (Optional)")]
     public Sprite noteImage;
 
     [Header("Unlock Conditions")]
-    [Tooltip("ทุกเงื่อนไขต้องเป็นจริง (AND logic)")]
+    [Tooltip("ทุกเงื่อนไขต้องเป็นจริง (AND logic) - ถ้าไม่ใส่เงื่อนไข = ปลดล็อกด้วย action trigger")]
     public UnlockCondition[] unlockConditions;
 }
-
-// ===============================
-// UnlockCondition.cs
-// เงื่อนไขสำหรับปลดล็อก Detective Note
-// ===============================
 
 [System.Serializable]
 public class UnlockCondition
 {
     public enum ConditionType
     {
-        DialogueReached,   // ถึง dialogue index ที่กำหนด
-        EvidenceUnlocked,  // Evidence ถูกปลดล็อก
-        StatementUnlocked, // Statement ถูกปลดล็อก
-        NoteUnlocked       // Note อื่นถูกปลดล็อกแล้ว
+        DialogueReached,    // ถึงบรรทัด dialogue ที่กำหนด
+        EvidenceUnlocked,   // ได้ evidence
+        StatementUnlocked,  // ได้ statement
+        NoteUnlocked        // note อื่นถูก unlock
     }
 
     [Header("Condition Settings")]
     public ConditionType type;
 
-    [Tooltip("ID ตามประเภท (dialogueID / evidenceID / statementID / noteID)")]
+    [Tooltip("ใส่ ID ตามประเภท: dialogueID, evidenceID, statementID, noteID")]
     public string targetID;
 
-    [Tooltip("ใช้เฉพาะ DialogueReached (index ของ dialogue)")]
+    [Tooltip("(เฉพาะ DialogueReached) ระบุ index บรรทัด")]
     public int dialogueIndex = -1;
 }
