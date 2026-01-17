@@ -30,25 +30,22 @@ public class DetectiveBookUI : MonoBehaviour
     [Header("Runtime Data")]
     private List<DetectiveNote> unlockedNotes = new List<DetectiveNote>();
     private int currentPageIndex = 0;
+    private int lastViewedPageIndex = 0; // ✅ เก็บหน้าที่เปิดล่าสุด
+    private bool hasNewNote = false; // ✅ มี Note ใหม่หรือไม่
 
     void Awake()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-            //DontDestroyOnLoad(gameObject); // ✅ เพิ่มบรรทัดนี้
-        }
-        else
-        {
-            Destroy(gameObject);
-            return;
-        }
+        // ✅ ไม่ใช้ Singleton แบบเดิม ให้แต่ละ Scene มี UI ของตัวเอง
+        Instance = this;
 
-        audioSource = gameObject.AddComponent<AudioSource>();
-        canvasGroup = bookPanel.GetComponent<CanvasGroup>();
+        if (bookPanel != null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+            canvasGroup = bookPanel.GetComponent<CanvasGroup>();
 
-        if (canvasGroup == null)
-            canvasGroup = bookPanel.AddComponent<CanvasGroup>();
+            if (canvasGroup == null)
+                canvasGroup = bookPanel.AddComponent<CanvasGroup>();
+        }
     }
 
     void Start()
@@ -70,17 +67,17 @@ public class DetectiveBookUI : MonoBehaviour
         }
 
         // ซ่อนตอนเริ่มต้น
-        bookPanel.SetActive(false);
+        if (bookPanel != null)
+            bookPanel.SetActive(false);
     }
 
     void Update()
     {
+        // ✅ เช็คว่า bookPanel ยังมีอยู่ก่อน
         if (bookPanel == null)
-        {
-            Debug.LogError("bookPanel LOST after scene change");
             return;
-        }
 
+        // กดปุ่ม B เพื่อเปิด/ปิด (เปลี่ยนได้ตามต้องการ)
         if (Input.GetKeyDown(KeyCode.B))
         {
             if (bookPanel.activeSelf)
@@ -106,12 +103,25 @@ public class DetectiveBookUI : MonoBehaviour
         if (unlockedNotes.Count == 0)
         {
             Debug.Log("📘 ยังไม่มีเบาะแสที่ปลดล็อก!");
-            // Optional: แสดง message "ยังไม่มีเบาะแส"
             return;
         }
 
         bookPanel.SetActive(true);
-        currentPageIndex = 0;
+
+        // ✅ ถ้ามี Note ใหม่ → ไปหน้า Note ใหม่ล่าสุด
+        if (hasNewNote)
+        {
+            currentPageIndex = unlockedNotes.Count - 1; // หน้าสุดท้าย
+            hasNewNote = false; // Reset flag
+            Debug.Log($"📖 Opening to NEW note (page {currentPageIndex + 1})");
+        }
+        // ✅ ถ้าไม่มี Note ใหม่ → กลับไปหน้าที่เปิดล่าสุด
+        else
+        {
+            currentPageIndex = Mathf.Clamp(lastViewedPageIndex, 0, unlockedNotes.Count - 1);
+            Debug.Log($"📖 Opening to LAST viewed page {currentPageIndex + 1}");
+        }
+
         ShowCurrentPage();
 
         // Pause game
@@ -124,6 +134,10 @@ public class DetectiveBookUI : MonoBehaviour
         // ✅ เช็ค null ก่อนปิด
         if (bookPanel == null)
             return;
+
+        // ✅ เก็บหน้าที่เปิดอยู่ตอนปิด
+        lastViewedPageIndex = currentPageIndex;
+        Debug.Log($"📖 Closing book, saving page {lastViewedPageIndex + 1}");
 
         bookPanel.SetActive(false);
 
@@ -212,7 +226,9 @@ public class DetectiveBookUI : MonoBehaviour
     void OnNoteUnlockedHandler(DetectiveNote note)
     {
         Debug.Log($"✨ UI: New note unlocked - {note.title}");
-        // Optional: แสดง notification popup
+
+        // ✅ ตั้งค่าว่ามี Note ใหม่
+        hasNewNote = true;
     }
 
     void OnDestroy()
