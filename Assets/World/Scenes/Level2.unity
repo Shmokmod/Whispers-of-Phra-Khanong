@@ -1240,6 +1240,10 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8200805878969729129, guid: 6dd4b7a77ed9418419c6d960eadc8578, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8200805878969729129, guid: 6dd4b7a77ed9418419c6d960eadc8578, type: 3}
       propertyPath: sceneToLoad
       value: Level2-SideRiver
       objectReference: {fileID: 0}

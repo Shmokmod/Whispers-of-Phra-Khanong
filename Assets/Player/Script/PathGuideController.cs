@@ -17,6 +17,9 @@ public class PathGuideController : MonoBehaviour
     public float updateInterval = 0.4f;       // อัปเดต path ทุกกี่วินาที
     public float showDuration = 5f;           // โชว์ path กี่วินาที
 
+    [Header("Debug")]
+    public bool debugMode = true;             // เปิด/ปิด debug log
+
     private NavMeshPath navPath;
     private List<GameObject> spawnedSteps = new List<GameObject>();
     private Coroutine pathRoutine;
@@ -24,6 +27,16 @@ public class PathGuideController : MonoBehaviour
     void Awake()
     {
         navPath = new NavMeshPath();
+        DebugLog("✅ PathGuideController Awake");
+    }
+
+    void Start()
+    {
+        // เช็คว่า setup ครบหรือยัง
+        if (target == null)
+            Debug.LogError("❌ Target is NULL! กำหนด Target ใน Inspector");
+        if (footstepPrefab == null)
+            Debug.LogError("❌ Footstep Prefab is NULL! กำหนด Prefab ใน Inspector");
     }
 
     // ===============================
@@ -31,14 +44,18 @@ public class PathGuideController : MonoBehaviour
     // ===============================
     public void TogglePath()
     {
+        DebugLog($"🔄 TogglePath() เรียก! pathRoutine = {(pathRoutine != null ? "กำลังทำงาน" : "NULL")}");
+
         if (pathRoutine != null)
         {
+            DebugLog("⏹️ หยุด path");
             StopCoroutine(pathRoutine);
             ClearPath();
             pathRoutine = null;
         }
         else
         {
+            DebugLog("▶️ เริ่ม path");
             pathRoutine = StartCoroutine(PathUpdater());
         }
     }
@@ -48,6 +65,7 @@ public class PathGuideController : MonoBehaviour
     // ===============================
     IEnumerator PathUpdater()
     {
+        DebugLog($"🔁 PathUpdater เริ่ม (จะแสดง {showDuration} วินาที)");
         float timer = 0f;
 
         while (timer < showDuration)
@@ -57,6 +75,7 @@ public class PathGuideController : MonoBehaviour
             timer += updateInterval;
         }
 
+        DebugLog("⏰ หมดเวลา - ปิด path");
         ClearPath();
         pathRoutine = null;
     }
@@ -64,12 +83,25 @@ public class PathGuideController : MonoBehaviour
     // ===============================
     // คำนวณ + สร้างรอยเท้า
     // ===============================
-    void ShowPath()
+    public void ShowPath()
     {
-        if (target == null || footstepPrefab == null)
+        DebugLog("🎯 ShowPath() เรียก");
+
+        if (target == null)
+        {
+            Debug.LogError("❌ Target is NULL!");
             return;
+        }
+
+        if (footstepPrefab == null)
+        {
+            Debug.LogError("❌ Footstep Prefab is NULL!");
+            return;
+        }
 
         ClearPath();
+
+        DebugLog($"📍 จาก: {transform.position} → ไป: {target.position}");
 
         bool foundPath = NavMesh.CalculatePath(
             transform.position,
@@ -78,8 +110,23 @@ public class PathGuideController : MonoBehaviour
             navPath
         );
 
-        if (!foundPath || navPath.corners.Length < 2)
+        if (!foundPath)
+        {
+            Debug.LogWarning("⚠️ ไม่เจอ NavMesh path! ตรวจสอบว่า:");
+            Debug.LogWarning("   1. มี NavMesh Bake แล้วหรือยัง?");
+            Debug.LogWarning("   2. ตำแหน่งเริ่มต้นและปลายทางอยู่บน NavMesh หรือเปล่า?");
             return;
+        }
+
+        if (navPath.corners.Length < 2)
+        {
+            Debug.LogWarning($"⚠️ Path สั้นเกินไป (มี {navPath.corners.Length} corners)");
+            return;
+        }
+
+        DebugLog($"✅ เจอ path! มี {navPath.corners.Length} มุม");
+
+        int totalSteps = 0;
 
         for (int i = 0; i < navPath.corners.Length - 1; i++)
         {
@@ -96,8 +143,11 @@ public class PathGuideController : MonoBehaviour
                 Vector3 dir = (end - start).normalized;
 
                 SpawnFootstep(pos, dir);
+                totalSteps++;
             }
         }
+
+        DebugLog($"👣 สร้างรอยเท้าแล้ว {totalSteps} ก้าว");
     }
 
     // ===============================
@@ -119,6 +169,11 @@ public class PathGuideController : MonoBehaviour
     // ===============================
     void ClearPath()
     {
+        if (spawnedSteps.Count > 0)
+        {
+            DebugLog($"🗑️ ลบรอยเท้า {spawnedSteps.Count} ก้าว");
+        }
+
         for (int i = 0; i < spawnedSteps.Count; i++)
         {
             if (spawnedSteps[i] != null)
@@ -126,5 +181,26 @@ public class PathGuideController : MonoBehaviour
         }
 
         spawnedSteps.Clear();
+    }
+
+    void DebugLog(string message)
+    {
+        if (debugMode)
+        {
+            Debug.Log($"[PathGuide] {message}");
+        }
+    }
+
+    // ===============================
+    // Gizmos เพื่อดู path ใน Editor
+    // ===============================
+    void OnDrawGizmos()
+    {
+        if (target == null) return;
+
+        // วาดเส้นจากตัวเองไป target
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawLine(transform.position, target.position);
+        Gizmos.DrawWireSphere(target.position, 0.5f);
     }
 }

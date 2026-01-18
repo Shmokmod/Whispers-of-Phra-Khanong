@@ -12,12 +12,15 @@ public class DetectiveBookManager : MonoBehaviour
     [Header("All Detective Notes")]
     public DetectiveNote[] allNotes;
 
+
+
     [Header("Runtime Data")]
     private HashSet<string> unlockedNoteIDs = new HashSet<string>();
-    private HashSet<string> reachedDialogueKeys = new HashSet<string>(); // "dialogueID_index"
+    public HashSet<string> reachedDialogueKeys = new HashSet<string>(); // "dialogueID_index"
 
     [Header("Events")]
     public System.Action<DetectiveNote> OnNoteUnlocked;
+    public System.Action<string, int> OnDialogueReached;
 
     [Header("Notification UI")]
     public Canvas NotificationCanvas;
@@ -86,6 +89,14 @@ public class DetectiveBookManager : MonoBehaviour
 
         canvasGroup.alpha = to;
     }
+
+        public bool HasReachedDialogue(string dialogueID, int index)
+    {
+        string key = $"{dialogueID}_{index}";
+        return reachedDialogueKeys.Contains(key);
+    }
+
+    
 
 
     IEnumerator BlinkIcon()
@@ -229,6 +240,10 @@ public class DetectiveBookManager : MonoBehaviour
         {
             reachedDialogueKeys.Add(key);
             Debug.Log($"📖 Dialogue Reached: {key}");
+            
+            // ⬇️ เพิ่มบรรทัดนี้เพื่อแจ้ง Event
+            OnDialogueReached?.Invoke(dialogueID, index);
+            
             TryUnlockNotes();
         }
     }
