@@ -219,4 +219,5 @@ public class StatementCard : MonoBehaviour,
 
         return null;
     }
+
 }
