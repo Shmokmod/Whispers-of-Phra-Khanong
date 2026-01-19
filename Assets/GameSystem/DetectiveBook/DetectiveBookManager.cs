@@ -38,11 +38,10 @@ public class DetectiveBookManager : MonoBehaviour
         canvasGroup = NotificationCanvas.GetComponent<CanvasGroup>();
         OnNoteUnlocked += ShowNoteNotification;
 
-
         if (Instance == null)
         {
             Instance = this;
-            //DontDestroyOnLoad(gameObject);
+            DontDestroyOnLoad(gameObject); // ⬇️ เอา comment ออก!
         }
         else
         {

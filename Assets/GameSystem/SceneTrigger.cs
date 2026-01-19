@@ -34,7 +34,6 @@ public class SceneTrigger : MonoBehaviour, IInteractable
         // Subscribe to dialogue events
         if (requireDialogue && DetectiveBookManager.Instance != null)
         {
-            // ฟังเหตุการณ์ว่ามี dialogue reach ใหม่หรือไม่
             DetectiveBookManager.Instance.OnDialogueReached += OnDialogueReachedEvent;
             DebugLog("✅ Subscribed to OnDialogueReached event");
         }
@@ -54,12 +53,29 @@ public class SceneTrigger : MonoBehaviour, IInteractable
         // เช็คว่าต้องการ unlock หรือไม่
         if (requireDialogue)
         {
-            CheckUnlockStatus();
+            // ⬇️ เพิ่ม delay เล็กน้อยเพื่อให้ตัวอื่นโหลดเสร็จก่อน
+            StartCoroutine(DelayedUnlockCheck());
         }
         else
         {
             isUnlocked = true;
             gameObject.SetActive(true);
+        }
+    }
+
+    private IEnumerator DelayedUnlockCheck()
+    {
+        yield return new WaitForEndOfFrame();
+        CheckUnlockStatus();
+    }
+
+    // ⬇️ เพิ่ม OnEnable เพื่อ re-check ทุกครั้งที่ GameObject active
+    private void OnEnable()
+    {
+        if (requireDialogue && !isUnlocked)
+        {
+            // Re-check เมื่อ object ถูก active (กรณีที่ซ่อนไว้แล้วค่อยโผล่)
+            Invoke(nameof(RefreshUnlockStatus), 0.1f);
         }
     }
 
@@ -109,6 +125,10 @@ public class SceneTrigger : MonoBehaviour, IInteractable
         }
 
         string key = $"{requiredDialogueID}_{requiredDialogueIndex}";
+
+        // ⬇️ เพิ่ม debug ว่ามี key อะไรบ้างใน set
+        DebugLog($"🔍 All reached dialogues: {string.Join(", ", DetectiveBookManager.Instance.reachedDialogueKeys)}");
+
         isUnlocked = DetectiveBookManager.Instance.HasReachedDialogue(requiredDialogueID, requiredDialogueIndex);
 
         if (isUnlocked)
@@ -119,6 +139,7 @@ public class SceneTrigger : MonoBehaviour, IInteractable
         else
         {
             DebugLog($"🔒 Dialogue not reached: {key} - Portal locked!");
+            DebugLog($"📋 Looking for key: '{key}'");
             if (hideWhenLocked)
             {
                 gameObject.SetActive(false);
