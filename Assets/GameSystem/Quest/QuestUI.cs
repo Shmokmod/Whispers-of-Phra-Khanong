@@ -1,0 +1,83 @@
+﻿using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+
+public class QuestUI : MonoBehaviour
+{
+    [Header("UI References")]
+    public GameObject questPanel;
+    public TextMeshProUGUI questNameText;
+    public TextMeshProUGUI objectiveText;
+    public Image questIcon; // ถ้ามี icon
+
+    [Header("Animation (Optional)")]
+    public Animator panelAnimator;
+
+    void Start()
+    {
+        // ซ่อน UI ตอนเริ่ม
+        if (questPanel != null)
+            questPanel.SetActive(false);
+
+        // Subscribe events
+        if (QuestManager.Instance != null)
+        {
+            QuestManager.Instance.onQuestStarted.AddListener(ShowQuest);
+            QuestManager.Instance.onQuestCompleted.AddListener(HideQuest);
+            QuestManager.Instance.onQuestUpdated.AddListener(UpdateQuestDisplay);
+        }
+    }
+
+    void ShowQuest(Quest quest)
+    {
+        if (questPanel != null)
+            questPanel.SetActive(true);
+
+        UpdateQuestDisplay(quest);
+
+        // เล่น animation (ถ้ามี)
+        if (panelAnimator != null)
+            panelAnimator.SetTrigger("Show");
+    }
+
+    void UpdateQuestDisplay(Quest quest)
+    {
+        if (questNameText != null)
+            questNameText.text = quest.questName;
+
+        if (objectiveText != null)
+            objectiveText.text = quest.currentObjective;
+    }
+
+    void HideQuest(Quest quest)
+    {
+        // เล่น animation ก่อน (ถ้ามี)
+        if (panelAnimator != null)
+        {
+            panelAnimator.SetTrigger("Hide");
+            Invoke("DelayedHide", 0.5f); // รอ animation จบ
+        }
+        else
+        {
+            if (questPanel != null)
+                questPanel.SetActive(false);
+        }
+    }
+
+    void DelayedHide()
+    {
+        if (questPanel != null)
+            questPanel.SetActive(false);
+    }
+
+    void OnDestroy()
+    {
+        // Unsubscribe events
+        if (QuestManager.Instance != null)
+        {
+            QuestManager.Instance.onQuestStarted.RemoveListener(ShowQuest);
+            QuestManager.Instance.onQuestCompleted.RemoveListener(HideQuest);
+            QuestManager.Instance.onQuestUpdated.RemoveListener(UpdateQuestDisplay);
+        }
+    }
+}

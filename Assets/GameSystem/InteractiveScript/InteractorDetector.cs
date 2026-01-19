@@ -1,58 +1,119 @@
-using UnityEngine;
-using UnityEngine.InputSystem;
+﻿using UnityEngine;
+using UnityEngine.SceneManagement;
+using System.Collections;
 
 public class InteractorDetector : MonoBehaviour
 {
-    private IInteractable interactableInRange = null; // The interactable object currently in range
-    public GameObject interactionIcon; // UI icon to show when an interactable is in range
+    private IInteractable interactableInRange = null;
+    public GameObject interactionIcon;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    [Header("Detector Settings")]
+    public float detectRadius = 1.0f;     // ใช้เช็กตอนวาป
+
+    void Awake()
     {
-        interactionIcon.SetActive(false);
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+        SceneManager.sceneLoaded += OnSceneLoaded;
+
+        if (interactionIcon != null)
+            interactionIcon.SetActive(false);
+        else
+            Debug.LogWarning("[InteractorDetector] interactionIcon ยังไม่ได้เซ็ต!");
     }
 
-    //public void OnInteract()//(InputAction.CallbackContext context)
-    //{
-    //    if (Input.GetButtonDown("Jump") && interactableInRange != null && interactableInRange.CanInteract()) //(context.performed && interactableInRange != null && interactableInRange.CanInteract())
-    //    {
-    //        interactableInRange.Interact()
-    //        print("Press Button");
-
-    //    }
-    //}
-
-    void Update()
+    void OnDestroy()
     {
-        if (Input.GetButtonDown("Jump") && interactableInRange != null && interactableInRange.CanInteract())
-        {
-            interactableInRange.Interact();
-            Debug.Log("Press Button");
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        if (this == null || gameObject == null)
+            return;
+
+        interactableInRange = null;
+
+        if (interactionIcon != null)
             interactionIcon.SetActive(false);
+
+        StartCoroutine(RecheckInteractableAfterWarp());
+    }
+
+    IEnumerator RecheckInteractableAfterWarp()
+    {
+        // รอให้ Player ถูกวางเรียบร้อย
+        yield return null;
+        yield return null;
+
+        Physics.SyncTransforms();
+
+        // เช็กว่ามี interactable อยู่รอบตัวมั้ย (กรณี spawn ใน trigger)
+        Collider[] hits = Physics.OverlapSphere(transform.position, detectRadius);
+
+        foreach (var hit in hits)
+        {
+            if (hit.TryGetComponent(out IInteractable interactable))
+            {
+                if (interactable.CanInteract())
+                {
+                    interactableInRange = interactable;
+                    if (interactionIcon != null)
+                        interactionIcon.SetActive(true);
+
+                    Debug.Log("[InteractorDetector] Auto-detected interactable after warp: " + hit.name);
+                    yield break;
+                }
+            }
         }
     }
 
+    void Update()
+    {
+        if (Input.GetButtonDown("Jump") && interactableInRange != null)
+        {
+            if (interactableInRange.CanInteract())
+            {
+                interactableInRange.Interact();
+                if (interactionIcon != null)
+                    interactionIcon.SetActive(false);
+            }
+            else
+            {
+                interactableInRange = null;
+                if (interactionIcon != null)
+                    interactionIcon.SetActive(false);
+            }
+        }
+    }
 
     private void OnTriggerEnter(Collider collision)
     {
-        if(collision.TryGetComponent(out IInteractable interactable) && interactable.CanInteract())
+        if (collision == null) return;
+        if (collision.gameObject == gameObject) return;
+        if (collision.CompareTag("Player")) return;
+        if (collision.transform.IsChildOf(transform)) return;
+
+        if (collision.TryGetComponent(out IInteractable interactable))
         {
-            interactableInRange = interactable;
-            interactionIcon.SetActive(true);
-            print("InteractDetect In Range");
+            if (interactable.CanInteract())
+            {
+                interactableInRange = interactable;
+                if (interactionIcon != null)
+                    interactionIcon.SetActive(true);
+            }
         }
     }
 
     private void OnTriggerExit(Collider collision)
     {
-        if (collision.TryGetComponent(out IInteractable interactable) && interactable == interactableInRange)
+        if (collision == null) return;
+
+        if (collision.TryGetComponent(out IInteractable interactable) &&
+            interactable == interactableInRange)
         {
             interactableInRange = null;
-            interactionIcon.SetActive(false);
+            if (interactionIcon != null)
+                interactionIcon.SetActive(false);
         }
     }
-
-
-
-
 }

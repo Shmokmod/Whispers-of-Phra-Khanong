@@ -27,7 +27,6 @@ public class PlayerMovement : MonoBehaviour
     {
         moveInput.x = Input.GetAxisRaw("Horizontal");
         moveInput.y = Input.GetAxisRaw("Vertical");
-
         isRunning = Input.GetKey(KeyCode.LeftShift) && moveInput != Vector2.zero;
     }
 
@@ -52,17 +51,24 @@ public class PlayerMovement : MonoBehaviour
         // ตั้งค่า Animation
         bool isMoving = moveInput != Vector2.zero;
         animator.SetBool("isWalking", isMoving);
-        //animator.SetBool("isRunning", isRunning);
 
-        // ถ้าไม่ขยับ บันทึก direction สุดท้าย
-        if (!isMoving)
+        // บันทึก direction และอัปเดต parameters
+        if (isMoving)
         {
-            animator.SetFloat("LastInputX", animator.GetFloat("InputX"));
-            animator.SetFloat("LastInputY", animator.GetFloat("InputY"));
-        }
+            // อัปเดต input parameters ขณะกำลังเคลื่อนที่
+            animator.SetFloat("InputX", normalizedInput.x);
+            animator.SetFloat("InputY", normalizedInput.y);
 
-        // อัปเดต input parameters
-        animator.SetFloat("InputX", normalizedInput.x);
-        animator.SetFloat("InputY", normalizedInput.y);
+            // บันทึก direction สุดท้ายไว้
+            animator.SetFloat("LastInputX", normalizedInput.x);
+            animator.SetFloat("LastInputY", normalizedInput.y);
+        }
+        else
+        {
+            // เมื่อหยุด ให้ Input เป็น 0
+            animator.SetFloat("InputX", 0);
+            animator.SetFloat("InputY", 0);
+            // LastInput จะคงค่าเดิมที่บันทึกไว้ตอนเคลื่อนที่
+        }
     }
 }

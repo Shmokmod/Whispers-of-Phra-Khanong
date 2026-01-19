@@ -14,13 +14,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::NPCdialogue
   npcName: "\u0E40\u0E08\u0E47\u0E04"
   npcPortrait: {fileID: 0}
-  leftPortrait: {fileID: 21300000, guid: f28da8997a114094690dcea879eb738d, type: 3}
+  leftPortrait: {fileID: 21300000, guid: 2acfde706dec7cb45a0295e4098aee33, type: 3}
   rightPortrait: {fileID: 21300000, guid: 3778434aa7bc39e48b914a4f6cd6d5e1, type: 3}
+  useCutscene: 0
+  cutsceneImage: {fileID: 0}
+  cutsceneDuration: 2
+  cutsceneFadeDuration: 0.5
   dialogueLines:
-  - "\u0E04\u0E27\u0E22"
-  - "\u0E04\u0E27\u0E22\u0E44\u0E23"
-  - "\u0E04\u0E27\u0E22"
-  speakerPerLine: 0100000002000000
+  - "\u0E1A\u0E17\u0E1E\u0E39\u0E14\u0E46"
+  - "\u0E1A\u0E17\u0E1E\u0E39\u0E14\u0E46"
+  - "\u0E1A\u0E17\u0E1E\u0E39\u0E14\u0E46"
+  speakerPerLine: 010000000200000002000000
   typingSpeed: 0.05
   autoProgressLine: 010101
   autoProgressDelay: 1
