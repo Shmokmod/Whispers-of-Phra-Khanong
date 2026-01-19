@@ -239,13 +239,20 @@ public class DetectiveBookManager : MonoBehaviour
         {
             reachedDialogueKeys.Add(key);
             Debug.Log($"📖 Dialogue Reached: {key}");
-            
-            // ⬇️ เพิ่มบรรทัดนี้เพื่อแจ้ง Event
+
             OnDialogueReached?.Invoke(dialogueID, index);
-            
+
+            // ⬇️ ใส่ตรงนี้
+            SceneTrigger[] triggers = Object.FindObjectsByType<SceneTrigger>(FindObjectsSortMode.None);
+            foreach (var t in triggers)
+            {
+                t.RefreshUnlockStatus();
+            }
+
             TryUnlockNotes();
         }
     }
+
 
     // ==================== Get Unlocked Notes (Sorted) ====================
 

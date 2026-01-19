@@ -24,24 +24,68 @@ public class SceneTrigger : MonoBehaviour, IInteractable
     [Header("Optional Settings")]
     [SerializeField] private float interactCooldown = 0.5f;
     [SerializeField] private bool debugMode = true;
-    [SerializeField] private bool hideWhenLocked = true; // ซ่อน GameObject ถ้ายังไม่ unlock
+
+    [Header("Visual Control - อย่าซ่อน GameObject หลัก!")]
+    [Tooltip("GameObject ที่จะซ่อน/แสดง (sprite, particles)")]
+    public GameObject[] visualObjects;
+    
+    [Tooltip("Collider ที่จะปิด/เปิด")]
+    public CapsuleCollider portalCollider;
+    
+    [Tooltip("ShowPatchFollowWarpZone สำหรับแสดงเส้นทาง")]
+    public ShowPatchFollowWarpZone pathGuideDisplay;
 
     private float lastInteractTime = -999f;
     private bool isUnlocked = false;
 
     private void Awake()
     {
-        // Subscribe to dialogue events
-        if (requireDialogue && DetectiveBookManager.Instance != null)
+        DebugLog("🎬 Awake() - Initializing SceneTrigger");
+        
+        // หา Collider อัตโนมัติถ้าไม่ได้กำหนด
+        if (portalCollider == null)
         {
+            portalCollider = GetComponent<CapsuleCollider>();
+            if (portalCollider != null)
+            {
+                DebugLog($"✅ Auto-found CapsuleCollider: {portalCollider.GetType().Name}");
+            }
+        }
+    }
+
+    private void OnEnable()
+    {
+        DebugLog("🎬 OnEnable() called");
+        
+        // Subscribe event
+        if (requireDialogue)
+        {
+            if (DetectiveBookManager.Instance == null)
+            {
+                DebugLog("⚠️ DetectiveBookManager.Instance is NULL in OnEnable!");
+                return;
+            }
+            
+            DetectiveBookManager.Instance.OnDialogueReached -= OnDialogueReachedEvent;
             DetectiveBookManager.Instance.OnDialogueReached += OnDialogueReachedEvent;
             DebugLog("✅ Subscribed to OnDialogueReached event");
         }
     }
 
+    private void OnDisable()
+    {
+        DebugLog("🎬 OnDisable() called");
+        
+        // Unsubscribe เมื่อ disable
+        if (DetectiveBookManager.Instance != null)
+        {
+            DetectiveBookManager.Instance.OnDialogueReached -= OnDialogueReachedEvent;
+            DebugLog("❌ Unsubscribed from OnDialogueReached event");
+        }
+    }
+
     private void OnDestroy()
     {
-        // Unsubscribe เมื่อ destroy
         if (DetectiveBookManager.Instance != null)
         {
             DetectiveBookManager.Instance.OnDialogueReached -= OnDialogueReachedEvent;
@@ -50,16 +94,17 @@ public class SceneTrigger : MonoBehaviour, IInteractable
 
     private void Start()
     {
+        DebugLog($"🎬 Start() - requireDialogue: {requireDialogue}");
+        
         // เช็คว่าต้องการ unlock หรือไม่
         if (requireDialogue)
         {
-            // ⬇️ เพิ่ม delay เล็กน้อยเพื่อให้ตัวอื่นโหลดเสร็จก่อน
             StartCoroutine(DelayedUnlockCheck());
         }
         else
         {
             isUnlocked = true;
-            gameObject.SetActive(true);
+            ShowPortal();
         }
     }
 
@@ -69,28 +114,38 @@ public class SceneTrigger : MonoBehaviour, IInteractable
         CheckUnlockStatus();
     }
 
-    // ⬇️ เพิ่ม OnEnable เพื่อ re-check ทุกครั้งที่ GameObject active
-    private void OnEnable()
-    {
-        if (requireDialogue && !isUnlocked)
-        {
-            // Re-check เมื่อ object ถูก active (กรณีที่ซ่อนไว้แล้วค่อยโผล่)
-            Invoke(nameof(RefreshUnlockStatus), 0.1f);
-        }
-    }
-
     /// <summary>
     /// Event handler เมื่อมี dialogue reach
     /// </summary>
     private void OnDialogueReachedEvent(string dialogueID, int index)
     {
-        if (!requireDialogue || isUnlocked) return;
+        DebugLog($"🔔 OnDialogueReachedEvent CALLED! dialogueID={dialogueID}, index={index}");
+        
+        if (!requireDialogue)
+        {
+            DebugLog("⚠️ Skipped: requireDialogue is false");
+            return;
+        }
+        
+        if (isUnlocked)
+        {
+            DebugLog("⚠️ Skipped: already unlocked");
+            return;
+        }
+
+            if (!requireDialogue) return;
+
+        if (dialogueID == requiredDialogueID && index == requiredDialogueIndex)
+        {
+            UnlockPortal();
+        }
 
         string reachedKey = $"{dialogueID}_{index}";
         string requiredKey = $"{requiredDialogueID}_{requiredDialogueIndex}";
 
-        DebugLog($"📖 Dialogue Reached Event: {reachedKey}");
-        DebugLog($"🔑 Required Key: {requiredKey}");
+        DebugLog($"📖 Reached: {reachedKey}");
+        DebugLog($"🔑 Required: {requiredKey}");
+        DebugLog($"✅ Match: {reachedKey == requiredKey}");
 
         if (reachedKey == requiredKey)
         {
@@ -105,8 +160,78 @@ public class SceneTrigger : MonoBehaviour, IInteractable
     private void UnlockPortal()
     {
         isUnlocked = true;
-        gameObject.SetActive(true);
-        DebugLog($"🚪 Portal Unlocked! GameObject is now active.");
+        ShowPortal();
+        DebugLog($"🚪 Portal Unlocked!");
+    }
+
+    /// <summary>
+    /// แสดงประตู (visual + collider + path)
+    /// </summary>
+    private void ShowPortal()
+    {
+        DebugLog("👁️ ShowPortal() called");
+        
+        // แสดง Visual Objects
+        if (visualObjects != null && visualObjects.Length > 0)
+        {
+            foreach (var obj in visualObjects)
+            {
+                if (obj != null)
+                {
+                    obj.SetActive(true);
+                    DebugLog($"✅ Showing visual: {obj.name}");
+                }
+            }
+        }
+
+        // เปิด Collider
+        if (portalCollider != null)
+        {
+            portalCollider.enabled = true;
+            DebugLog("✅ Portal Collider enabled");
+        }
+
+        // แสดงเส้นทาง
+        if (pathGuideDisplay != null)
+        {
+            pathGuideDisplay.ShowPathOnce();
+            DebugLog("🗺️ Path guide activated!");
+        }
+    }
+
+    /// <summary>
+    /// ซ่อนประตู (visual + collider + path)
+    /// </summary>
+    private void HidePortal()
+    {
+        DebugLog("🙈 HidePortal() called");
+        
+        // ซ่อน Visual Objects
+        if (visualObjects != null && visualObjects.Length > 0)
+        {
+            foreach (var obj in visualObjects)
+            {
+                if (obj != null)
+                {
+                    obj.SetActive(false);
+                    DebugLog($"🙈 Hiding visual: {obj.name}");
+                }
+            }
+        }
+
+        // ปิด Collider
+        if (portalCollider != null)
+        {
+            portalCollider.enabled = false;
+            DebugLog("🚫 Portal Collider disabled");
+        }
+
+        // ซ่อนเส้นทาง
+        if (pathGuideDisplay != null)
+        {
+            pathGuideDisplay.HidePath();
+            DebugLog("🗺️ Path guide hidden");
+        }
     }
 
     /// <summary>
@@ -117,38 +242,31 @@ public class SceneTrigger : MonoBehaviour, IInteractable
         if (DetectiveBookManager.Instance == null)
         {
             DebugLog("⚠️ DetectiveBookManager not found!");
-            if (hideWhenLocked)
-            {
-                gameObject.SetActive(false);
-            }
+            HidePortal();
             return;
         }
 
         string key = $"{requiredDialogueID}_{requiredDialogueIndex}";
-
-        // ⬇️ เพิ่ม debug ว่ามี key อะไรบ้างใน set
-        DebugLog($"🔍 All reached dialogues: {string.Join(", ", DetectiveBookManager.Instance.reachedDialogueKeys)}");
-
         isUnlocked = DetectiveBookManager.Instance.HasReachedDialogue(requiredDialogueID, requiredDialogueIndex);
+
+        DebugLog($"🔍 Checking unlock status for: {key}");
+        DebugLog($"📋 All reached dialogues: {string.Join(", ", DetectiveBookManager.Instance.reachedDialogueKeys)}");
+        DebugLog($"🎯 Is Unlocked: {isUnlocked}");
 
         if (isUnlocked)
         {
             DebugLog($"✅ Dialogue already reached: {key} - Portal unlocked!");
-            gameObject.SetActive(true);
+            ShowPortal();
         }
         else
         {
             DebugLog($"🔒 Dialogue not reached: {key} - Portal locked!");
-            DebugLog($"📋 Looking for key: '{key}'");
-            if (hideWhenLocked)
-            {
-                gameObject.SetActive(false);
-            }
+            HidePortal();
         }
     }
 
     /// <summary>
-    /// เรียกใช้เพื่อเช็คสถานะใหม่ (เช่น หลังจาก dialogue เกิดขึ้น)
+    /// เรียกใช้เพื่อเช็คสถานะใหม่
     /// </summary>
     public void RefreshUnlockStatus()
     {
@@ -160,21 +278,18 @@ public class SceneTrigger : MonoBehaviour, IInteractable
 
     public bool CanInteract()
     {
-        // เช็ค cooldown
         if (Time.time - lastInteractTime < interactCooldown)
         {
             DebugLog("⚠️ Interact on cooldown");
             return false;
         }
 
-        // เช็คว่า unlock แล้วหรือยัง
         if (requireDialogue && !isUnlocked)
         {
             DebugLog($"🔒 Cannot interact - dialogue not reached: {requiredDialogueID}_{requiredDialogueIndex}");
             return false;
         }
 
-        // ตรวจสอบว่า LoadingScreen ไม่กำลัง loading อยู่
         if (LoadingScreen.Instance != null && LoadingScreen.Instance.IsLoading())
         {
             DebugLog("⚠️ Cannot interact - loading in progress");
@@ -192,18 +307,15 @@ public class SceneTrigger : MonoBehaviour, IInteractable
         }
 
         lastInteractTime = Time.time;
-
         DebugLog($"🚪 Interact -> Loading Scene: {sceneToLoad}, Spawn: {targetSpawnPointName}");
         StartCoroutine(LoadSceneWithTransition());
     }
 
     private IEnumerator LoadSceneWithTransition()
     {
-        // ส่งชื่อ spawn point ให้ SpawnManager
         SpawnManager.targetSpawnPointName = targetSpawnPointName;
         DebugLog($"📍 Set target spawn: {targetSpawnPointName}");
 
-        // ใช้ LoadSceneAsync
         if (LoadingScreen.Instance != null)
         {
             yield return StartCoroutine(LoadingScreen.Instance.LoadSceneAsync(sceneToLoad));
