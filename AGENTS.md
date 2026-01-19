@@ -2,13 +2,13 @@
 - Project name: Whispers-of-Phra-Khanong
 - Unity version: Unity 6000.2.8f1
 - Active scene:
-  - Name: Level2-SideRiver
+  - Name: Level1
   - Tags:
     - Untagged, Respawn, Finish, EditorOnly, MainCamera, Player, GameController, NPC
   - Layers:
     - Default, TransparentFX, Ignore Raycast, Water, UI, NPC, Player
 - Active game object:
-  - Name: รถเข็น (1)
+  - Name: Text
   - Tag: Untagged
-  - Layer: Default
+  - Layer: UI
 <!-- UNITY CODE ASSIST INSTRUCTIONS END -->
