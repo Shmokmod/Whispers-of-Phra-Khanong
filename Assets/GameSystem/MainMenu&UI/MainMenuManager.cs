@@ -17,11 +17,14 @@ public class MainMenuManager : MonoBehaviour
 
     public void Play()
     {
+        if (LoadingScreen.Instance != null)
+        {
+            StartCoroutine(LoadingScreen.Instance.LoadScene("Cutscene_Start"));
+        }
 
-        //playCutscene();
-
-        SceneManager.LoadScene("level1");
+        Debug.Log("Play button clicked, loading Cutscene_Start scene");
     }
+
 
 
 

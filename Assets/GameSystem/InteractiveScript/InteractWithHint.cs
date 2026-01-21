@@ -51,12 +51,14 @@ public class InteractWithHint : MonoBehaviour, IInteractable
         // ✅ ปลดล็อก Evidence (ถ้ามีระบบ Evidence)
         UnlockEvidence();
 
-        if (itemPrefab)
-        {
-            print("Dropped hint item");
-            GotItemUI.SetActive(true);
-            PauseController.isPaused = true;
-        }
+        print("Dropped hint item");
+        GotItemUI.SetActive(true);
+        PauseController.isPaused = true;
+
+        //if (itemPrefab)
+        //{
+
+        //}
     }
 
     // ✅ ฟังก์ชันใหม่: ปลดล็อก Note โดยตรง

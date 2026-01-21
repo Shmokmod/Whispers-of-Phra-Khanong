@@ -526,6 +526,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
+--- !u!1 &209462433 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5709709220839924046, guid: 5b867e06f39986a479fe2d99fe2c0eb4, type: 3}
+  m_PrefabInstance: {fileID: 1471736002}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &390765971 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 4f96409ccf7f2d54bac066292257dc1f, type: 3}
@@ -1512,11 +1517,6 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 3390558720134950976, guid: 4f96409ccf7f2d54bac066292257dc1f, type: 3}
---- !u!1 &1153038692 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 2085490419601230956, guid: 5b867e06f39986a479fe2d99fe2c0eb4, type: 3}
-  m_PrefabInstance: {fileID: 1471736002}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1180450264
 GameObject:
   m_ObjectHideFlags: 0
@@ -1926,7 +1926,7 @@ MonoBehaviour:
   hintID: Chest_Opened
   itemPrefab: {fileID: 7389517822404121699, guid: 80a08b1a422168647b3ef9f2bb460cfc, type: 3}
   openSpriteHint: {fileID: 0}
-  GotItemUI: {fileID: 1153038692}
+  GotItemUI: {fileID: 209462433}
   noteIDsToUnlock:
   - Chest_Opened
   evidenceIDsToUnlock: []
@@ -2291,7 +2291,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2085490419601230956, guid: 5b867e06f39986a479fe2d99fe2c0eb4, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2180744517713198905, guid: 5b867e06f39986a479fe2d99fe2c0eb4, type: 3}
       propertyPath: m_CullTransparentMesh
@@ -2304,6 +2304,10 @@ PrefabInstance:
     - target: {fileID: 3421131157806673395, guid: 5b867e06f39986a479fe2d99fe2c0eb4, type: 3}
       propertyPath: m_hasFontAssetChanged
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4330389967993383653, guid: 5b867e06f39986a479fe2d99fe2c0eb4, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4396978041553629793, guid: 5b867e06f39986a479fe2d99fe2c0eb4, type: 3}
       propertyPath: m_fontAsset
@@ -2480,6 +2484,14 @@ PrefabInstance:
     - target: {fileID: 7827929968653764308, guid: 5b867e06f39986a479fe2d99fe2c0eb4, type: 3}
       propertyPath: m_hasFontAssetChanged
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8368473477782133580, guid: 5b867e06f39986a479fe2d99fe2c0eb4, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 1252422467}
+    - target: {fileID: 8368473477782133580, guid: 5b867e06f39986a479fe2d99fe2c0eb4, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: CloseGotitemUI
       objectReference: {fileID: 0}
     - target: {fileID: 8372642817781533103, guid: 5b867e06f39986a479fe2d99fe2c0eb4, type: 3}
       propertyPath: m_fontAsset

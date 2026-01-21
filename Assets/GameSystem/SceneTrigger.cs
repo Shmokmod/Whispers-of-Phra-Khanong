@@ -318,7 +318,7 @@ public class SceneTrigger : MonoBehaviour, IInteractable
 
         if (LoadingScreen.Instance != null)
         {
-            yield return StartCoroutine(LoadingScreen.Instance.LoadSceneAsync(sceneToLoad));
+            yield return StartCoroutine(LoadingScreen.Instance.LoadScene(sceneToLoad));
         }
         else
         {

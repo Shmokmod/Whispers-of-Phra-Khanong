@@ -10,15 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ebd952404cf75894aabc7dc8d0db8ae5, type: 3}
-  m_Name: Yes
+  m_Name: 1Boss-GiveQuest
   m_EditorClassIdentifier: Assembly-CSharp::DetectiveNote
-  noteID: Note-Boss-Yes
-  title: "\u0E1A\u0E2D\u0E01\u0E2B\u0E31\u0E27\u0E2B\u0E19\u0E49\u0E32"
-  content: "\u0E2D\u0E27\u0E48\u0E32\u0E0A\u0E48\u0E32\u0E22\u0E46\u0E46\u0E46\u0E46\u0E46
-    \u0E2D\u0E34\u0E2D\u0E34\u0E2D\u0E34\u0E2D\u0E34\u0E2D\u0E34"
-  orderIndex: 2
-  noteImage: {fileID: 21300000, guid: f28da8997a114094690dcea879eb738d, type: 3}
+  noteID: Note1
+  title: "\u0E2B\u0E31\u0E27\u0E2B\u0E19\u0E49\u0E32\u0E2A\u0E31\u0E48\u0E07"
+  content: "\u0E08\u0E32\u0E01\u0E2A\u0E34\u0E48\u0E07\u0E17\u0E35\u0E48\u0E2B\u0E31\u0E27\u0E2B\u0E19\u0E49\u0E32\u0E2A\u0E31\u0E48\u0E07..."
+  orderIndex: 1
+  noteImage: {fileID: 21300000, guid: 31ae8a47158bd6849af91d978a8a042d, type: 3}
   unlockConditions:
   - type: 0
     targetID: Boss-QuestGiving
-    dialogueIndex: 5
+    dialogueIndex: 6

@@ -33,6 +33,11 @@ public class DetectiveBookManager : MonoBehaviour
     CanvasGroup canvasGroup;
 
 
+
+
+    [Header("TutorialUI")]
+    public GameObject DetectiveBooktutorialUI;
+
     void Awake()
     {
         canvasGroup = NotificationCanvas.GetComponent<CanvasGroup>();
@@ -41,7 +46,7 @@ public class DetectiveBookManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject); // ⬇️ เอา comment ออก!
+            //DontDestroyOnLoad(gameObject); // ⬇️ เอา comment ออก!
         }
         else
         {
@@ -214,6 +219,8 @@ public class DetectiveBookManager : MonoBehaviour
         {
             Debug.Log($"📝 Detective Note Unlocked: {note.title}");
             OnNoteUnlocked?.Invoke(note);
+            ShowNoteTutorialOnce();
+            Debug.Log($"📘 Total Unlocked Notes: {unlockedNoteIDs.Count}");
         }
 
         // ลอง unlock notes อื่นที่รอ note นี้
@@ -303,6 +310,30 @@ public class DetectiveBookManager : MonoBehaviour
         PlayerPrefs.DeleteKey("DetectiveBook_UnlockedNotes");
         Debug.Log("🗑️ Detective Book progress cleared.");
     }
+
+
+
+    //==================== Tutorial ====================
+    void ShowNoteTutorialOnce()
+    {
+        if (!PlayerPrefs.HasKey("Tutorial_Note"))
+        {
+            DetectiveBooktutorialUI.SetActive(true);
+            PlayerPrefs.SetInt("Tutorial_Note", 1);
+            Debug.Log("Showing Detective Book Tutorial UI for the first time.");
+        }
+    }
+
+    public void CloseTutorialUI()
+    {
+        DetectiveBooktutorialUI.SetActive(false);
+        Debug.Log("Detective Book Tutorial UI closed.");
+    }
+
+
+    // ==================== Save Data Structure ====================
+
+
 
     [System.Serializable]
     class SaveData
