@@ -206,6 +206,11 @@ public class DetectiveBookManager : MonoBehaviour
                 Debug.Log($"  📋 Check Note: '{condition.targetID}' → {(noteUnlocked ? "✅ PASS" : "❌ FAIL")}");
                 return noteUnlocked;
 
+            case UnlockCondition.ConditionType.HintInteracted:
+                bool interacted = interactedHints.Contains(condition.targetID);
+                Debug.Log($"  📋 Check HintInteracted: '{condition.targetID}' → {(interacted ? "✅ PASS" : "❌ FAIL")}");
+                return interacted;
+
             default:
                 Debug.LogWarning($"  ⚠️ Unknown condition type: {condition.type}");
                 return false;

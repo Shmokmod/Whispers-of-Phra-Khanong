@@ -20,6 +20,11 @@ public class NPC : MonoBehaviour, IInteractable
     [Header("Visual")]
     [SerializeField] private Sprite defaultSprite;
 
+
+    [SerializeField] private float fastTypingMultiplier = 0.1f;
+
+
+
     // Controllers
     private DialogueController dialogueUI;
     private CutsceneController cutsceneController;
@@ -110,6 +115,26 @@ public class NPC : MonoBehaviour, IInteractable
             StartDialogue();
     }
 
+    private void Update()
+    {
+        if (!isDialogueActive) return;
+
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            if (isTyping)
+            {
+                StopAllCoroutines();
+                dialogueUI.SetDialogueText(dialogueData.dialogueLines[dialogueIndex]);
+                isTyping = false;
+            }
+            else
+            {
+                NextLine();
+            }
+        }
+    }
+
+
     private void InitializeDialogue()
     {
         isDialogueActive = true;
@@ -186,23 +211,32 @@ public class NPC : MonoBehaviour, IInteractable
         isTyping = true;
         dialogueUI.SetDialogueText("");
 
-        foreach (char letter in dialogueData.dialogueLines[dialogueIndex])
+        string line = dialogueData.dialogueLines[dialogueIndex];
+
+        foreach (char letter in line)
         {
             dialogueUI.SetDialogueText(dialogueUI.dialogueText.text + letter);
-            yield return new WaitForSecondsRealtime(dialogueData.typingSpeed);
+
+            float speed = dialogueData.typingSpeed;
+            if (Input.GetKey(KeyCode.Space))
+                speed *= fastTypingMultiplier;
+
+            yield return new WaitForSecondsRealtime(speed);
         }
 
         isTyping = false;
 
-        // auto progress
+        // ✅ autoProgress เดิม (ไม่แตะ)
         if (dialogueData.autoProgressLine != null &&
-            dialogueData.autoProgressLine.Length > dialogueIndex &&
+            dialogueIndex < dialogueData.autoProgressLine.Length &&
             dialogueData.autoProgressLine[dialogueIndex])
         {
             yield return new WaitForSecondsRealtime(dialogueData.autoProgressDelay);
             NextLine();
         }
     }
+
+
 
     // ===============================
     // End Dialogue
@@ -340,11 +374,13 @@ public class NPC : MonoBehaviour, IInteractable
     {
         return position switch
         {
-            SpeakerPosition.Left => "ตัวละคร A",
-            SpeakerPosition.Right => "ตัวละคร B",
+            SpeakerPosition.Left => dialogueData.npcName,
+            SpeakerPosition.Right => dialogueData.playerName,
             _ => dialogueData.npcName
         };
     }
+
+
 
     // ===============================
     // Choices

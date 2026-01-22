@@ -6231,9 +6231,17 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5710835497038682152, guid: c39de33acc5e44b41a101e81db923dca, type: 3}
+      propertyPath: m_Padding.m_Left
+      value: -950
+      objectReference: {fileID: 0}
     - target: {fileID: 7825833962043277330, guid: c39de33acc5e44b41a101e81db923dca, type: 3}
       propertyPath: m_Name
       value: DialogueUI
+      objectReference: {fileID: 0}
+    - target: {fileID: 8368306630546267159, guid: c39de33acc5e44b41a101e81db923dca, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 400
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -10343,6 +10351,7 @@ MonoBehaviour:
   dialogueID: Boss-QuestGiving
   dialogueData: {fileID: 11400000, guid: dff2f4e5c2e1b5b4d9bea59279ca325a, type: 2}
   defaultSprite: {fileID: 0}
+  fastTypingMultiplier: 0.1
 --- !u!65 &1269063403
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -10724,6 +10733,7 @@ MonoBehaviour:
   dialogueID: Soilder-Hint
   dialogueData: {fileID: 11400000, guid: f6d727ef7c6228e409699671beb2bb87, type: 2}
   defaultSprite: {fileID: 0}
+  fastTypingMultiplier: 0.1
 --- !u!65 &1313332093
 BoxCollider:
   m_ObjectHideFlags: 0

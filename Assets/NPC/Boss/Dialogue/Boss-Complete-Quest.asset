@@ -12,15 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 090a81b3778af8e468682cd02520f6a5, type: 3}
   m_Name: Boss-Complete-Quest
   m_EditorClassIdentifier: Assembly-CSharp::NPCdialogue
-  dialogueID: Boss-Complete-Quest
   npcName: Boss
+  playerName: "\u0E19\u0E31\u0E01\u0E2A\u0E37\u0E1A"
   npcPortrait: {fileID: 0}
   leftPortrait: {fileID: 21300000, guid: 34578732b77c10a48b64521a64192784, type: 3}
   rightPortrait: {fileID: 21300000, guid: 3778434aa7bc39e48b914a4f6cd6d5e1, type: 3}
-  useCutscene: 0
-  cutsceneImage: {fileID: 0}
-  cutsceneDuration: 2
-  cutsceneFadeDuration: 0.5
   dialogueLines:
   - "\u0E07\u0E31\u0E49\u0E19\u0E44\u0E1B\u0E2B\u0E32\u0E21\u0E32"
   - "\u0E42\u0E2D\u0E40\u0E04\u0E23"
@@ -32,3 +28,4 @@ MonoBehaviour:
   endDialogueLine: 000001
   choices: []
   statementUnlocks: []
+  cutsceneEvents: []

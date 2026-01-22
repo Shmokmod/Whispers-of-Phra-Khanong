@@ -29,6 +29,9 @@ public class NPCdialogue : ScriptableObject
     [Header("Character Info")]
     public string npcName;
 
+    [Header("Player Info")]
+    public string playerName;
+
     [Header("Portraits")]
     public Sprite npcPortrait;
     public Sprite leftPortrait;
@@ -100,4 +103,8 @@ public class CutsceneEvent
     public bool useFadeIn = true;
     public bool useFadeOut = true;
     public float fadeDuration = 0.5f;
+
+
+
+
 }
