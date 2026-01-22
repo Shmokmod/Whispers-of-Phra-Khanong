@@ -948,7 +948,8 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 491ada743f0a25a45994898403029062, type: 2}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 904434160023205938, guid: a14f122e7f98519458bb0e135d3c2c11, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:
@@ -3936,11 +3937,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 450862351}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!1 &502603305 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 9131065945059034116, guid: 5b867e06f39986a479fe2d99fe2c0eb4, type: 3}
-  m_PrefabInstance: {fileID: 1471736002}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &503394130 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -8391222552659086748, guid: e8c19e552cb2d604a82f35a51a6362a1, type: 3}
@@ -7847,7 +7843,7 @@ PrefabInstance:
     - target: {fileID: 4218021078451732095, guid: ba87ffecf8dc3b74280fe4e11a58174f, type: 3}
       propertyPath: pauseMenuUI
       value: 
-      objectReference: {fileID: 502603305}
+      objectReference: {fileID: 0}
     - target: {fileID: 6094626421336968824, guid: ba87ffecf8dc3b74280fe4e11a58174f, type: 3}
       propertyPath: m_LocalPosition.x
       value: 27.52682
@@ -7948,6 +7944,7 @@ PrefabInstance:
     m_RemovedGameObjects:
     - {fileID: 6205296133384227820, guid: ba87ffecf8dc3b74280fe4e11a58174f, type: 3}
     - {fileID: 9095293093484534290, guid: ba87ffecf8dc3b74280fe4e11a58174f, type: 3}
+    - {fileID: 2455743910317321360, guid: ba87ffecf8dc3b74280fe4e11a58174f, type: 3}
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 6094626421336968824, guid: ba87ffecf8dc3b74280fe4e11a58174f, type: 3}
       insertIndex: -1
@@ -11443,6 +11440,7 @@ PrefabInstance:
     m_RemovedGameObjects:
     - {fileID: 7755509512810043329, guid: 5b867e06f39986a479fe2d99fe2c0eb4, type: 3}
     - {fileID: 386674957808488356, guid: 5b867e06f39986a479fe2d99fe2c0eb4, type: 3}
+    - {fileID: 9131065945059034116, guid: 5b867e06f39986a479fe2d99fe2c0eb4, type: 3}
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 4784087620223204677, guid: 5b867e06f39986a479fe2d99fe2c0eb4, type: 3}
       insertIndex: -1

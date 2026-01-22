@@ -282,19 +282,22 @@ public class DetectiveBookManager : MonoBehaviour
         };
 
         string json = JsonUtility.ToJson(data);
-        PlayerPrefs.SetString("DetectiveBook_UnlockedNotes", json);
+        PlayerPrefs.SetString(BookSaveKey(), json);
         PlayerPrefs.Save();
     }
 
+
     void LoadUnlockedNotes()
     {
-        if (!PlayerPrefs.HasKey("DetectiveBook_UnlockedNotes"))
+        string key = BookSaveKey();
+
+        if (!PlayerPrefs.HasKey(key))
         {
-            Debug.Log("📘 No saved Detective Notes found. Starting fresh.");
+            Debug.Log("📘 No saved Detective Notes for this slot.");
             return;
         }
 
-        string json = PlayerPrefs.GetString("DetectiveBook_UnlockedNotes");
+        string json = PlayerPrefs.GetString(key);
         var data = JsonUtility.FromJson<SaveData>(json);
 
         unlockedNoteIDs = new HashSet<string>(data.unlockedNoteIDs);
@@ -302,6 +305,7 @@ public class DetectiveBookManager : MonoBehaviour
 
         Debug.Log($"📘 Loaded {unlockedNoteIDs.Count} unlocked notes.");
     }
+
 
     public void ClearAllProgress()
     {
@@ -333,7 +337,11 @@ public class DetectiveBookManager : MonoBehaviour
 
     // ==================== Save Data Structure ====================
 
-
+    string BookSaveKey()
+    {
+        int slot = PlayerPrefs.GetInt("CurrentSlot", -1);
+        return $"DetectiveBook_UnlockedNotes_{slot}";
+    }
 
     [System.Serializable]
     class SaveData

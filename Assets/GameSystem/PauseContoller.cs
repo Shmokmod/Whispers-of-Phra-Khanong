@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class PauseController : MonoBehaviour
 {
@@ -19,7 +20,13 @@ public class PauseController : MonoBehaviour
 
     public void PauseGame()
     {
-        pauseMenuUI.SetActive(true); // แสดง UI หยุดเกม (เช่น Canvas)
+        if (SceneManager.GetActiveScene().name == "Mainmenu")
+        {
+            pauseMenuUI.SetActive(false);
+            return;
+        }
+
+        pauseMenuUI.SetActive(true);
         Time.timeScale = 0f;
         isPaused = true;
     }

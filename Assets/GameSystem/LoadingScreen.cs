@@ -1,7 +1,8 @@
-﻿using UnityEngine;
-using UnityEngine.UI;
+﻿using System.Collections;
+using Unity.Cinemachine;
+using UnityEngine;
 using UnityEngine.SceneManagement;
-using System.Collections;
+using UnityEngine.UI;
 
 public class LoadingScreen : MonoBehaviour
 {
@@ -108,9 +109,15 @@ public class LoadingScreen : MonoBehaviour
         if (!isLoading) return;
         if (scene.name == "_PersistentManagers") return;
 
+        // 🔗 bind กล้อง
+        var cam = Object.FindAnyObjectByType<CinemachineCamera>();
+        if (cam != null)
+            cam.Follow = PlayerPersistence.Instance.transform;
+
         DebugLog($"🎬 Scene Loaded: {scene.name}");
         StartCoroutine(CompleteLoadingSequence());
     }
+
 
     private IEnumerator CompleteLoadingSequence()
     {
@@ -141,6 +148,7 @@ public class LoadingScreen : MonoBehaviour
 
     private IEnumerator LoadSceneAsync(string sceneName)
     {
+        DebugLog($"🚨 LoadSceneAsync called : {sceneName}");
         if (isLoading)
         {
             DebugLog("⚠️ Already loading!");

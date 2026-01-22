@@ -1,51 +1,55 @@
 ﻿using UnityEngine;
+using UnityEngine.SceneManagement;
+using System.Collections;
 
 public class PlayerPersistence : MonoBehaviour
 {
-    private static PlayerPersistence instance;
+    public static PlayerPersistence Instance;
 
     void Awake()
     {
-        // ถ้ามี instance เก่าอยู่แล้ว
-        if (instance == null)
+        if (Instance == null)
         {
-            instance = this;
+            Instance = this;
 
-            // แยก Player ออกจาก Parent (ถ้ามี)
             if (transform.parent != null)
-            {
                 transform.SetParent(null);
-            }
 
-            // เรียก DontDestroyOnLoad กับ root object
-            GameObject root = transform.root.gameObject;
-            DontDestroyOnLoad(root);
-
-            Debug.Log($"✅ [PlayerPersistence] Player set as DontDestroyOnLoad: {root.name}");
-
-            // ตรวจสอบว่ามี Tag "Player" หรือไม่
-            if (!gameObject.CompareTag("Player"))
-            {
-                Debug.LogWarning("⚠️ [PlayerPersistence] Player GameObject doesn't have 'Player' tag!");
-            }
+            DontDestroyOnLoad(gameObject);
         }
         else
         {
-            if (instance != this)
-            {
-                Debug.Log($"❌ [PlayerPersistence] Duplicate Player found - destroying: {gameObject.name}");
-                Destroy(gameObject);
-            }
+            Destroy(gameObject);
         }
+    }
+
+    void OnEnable()
+    {
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    void OnDisable()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        StartCoroutine(ApplyAfterSceneReady());
+    }
+
+    IEnumerator ApplyAfterSceneReady()
+    {
+        yield return new WaitForEndOfFrame();
+
+        Debug.Log($"[LOAD] Apply Save in scene");
+        SaveManager.Instance.ApplyPlayerPosition(transform);
+        Debug.Log($"[PLAYER] Pos After Load = {transform.position}");
     }
 
     void OnDestroy()
     {
-        // ถ้าเป็น instance หลักที่ถูกทำลาย ให้ clear reference
-        if (instance == this)
-        {
-            instance = null;
-            Debug.Log("[PlayerPersistence] Main instance destroyed");
-        }
+        if (Instance == this)
+            Instance = null;
     }
 }

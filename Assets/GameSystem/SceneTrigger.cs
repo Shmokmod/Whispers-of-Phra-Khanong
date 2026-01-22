@@ -314,6 +314,8 @@ public class SceneTrigger : MonoBehaviour, IInteractable
     private IEnumerator LoadSceneWithTransition()
     {
         SpawnManager.targetSpawnPointName = targetSpawnPointName;
+        SpawnManager.forceUseSpawnPoint = true; // ⭐ สำคัญ
+
         DebugLog($"📍 Set target spawn: {targetSpawnPointName}");
 
         if (LoadingScreen.Instance != null)
@@ -322,12 +324,10 @@ public class SceneTrigger : MonoBehaviour, IInteractable
         }
         else
         {
-            DebugLog("⚠️ LoadingScreen not found, loading directly");
             LoadScene();
         }
-
-        DebugLog("✅ Scene transition complete");
     }
+
 
     private void LoadScene()
     {

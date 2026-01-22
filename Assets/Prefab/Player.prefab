@@ -17,6 +17,7 @@ GameObject:
   - component: {fileID: 5136350149640580516}
   - component: {fileID: 819154759711925996}
   - component: {fileID: 3568129221906045551}
+  - component: {fileID: 904434160023205938}
   m_Layer: 7
   m_Name: Player
   m_TagString: Player
@@ -248,7 +249,7 @@ MonoBehaviour:
       m_Calls: []
     m_ActionId: 9caa3d8a-6b2f-4e8e-8bad-6ede561bd9be
     m_ActionName: UI/TrackedDeviceOrientation
-  m_NeverAutoSwitchControlSchemes: 0
+  m_NeverAutoSwitchControlSchemes: 1
   m_DefaultControlScheme: 
   m_DefaultActionMap: Player
   m_SplitScreenIndex: 0
@@ -315,6 +316,19 @@ MonoBehaviour:
   footstepYOffset: 0.05
   updateInterval: 0.4
   showDuration: 5
+  debugMode: 1
+--- !u!114 &904434160023205938
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 452899438438950066}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 476d0447a3294a24ca33daca2bdea0b7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
 --- !u!1 &1617048316746748208
 GameObject:
   m_ObjectHideFlags: 0

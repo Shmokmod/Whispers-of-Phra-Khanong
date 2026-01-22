@@ -9,6 +9,9 @@ public class SpawnManager : MonoBehaviour
 {
     public static SpawnManager Instance;
 
+    public static bool forceUseSpawnPoint = false;
+
+
     // เก็บชื่อ spawn point ที่ต้องการไปหา
     public static string targetSpawnPointName = "";
 
@@ -42,21 +45,34 @@ public class SpawnManager : MonoBehaviour
         SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
+    // 🔹 อยู่ระดับเดียวกับ Awake / OnEnable
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        DebugLog($"📍 Scene loaded: {scene.name}, Target Spawn: '{targetSpawnPointName}'");
+        DebugLog($"📍 Scene loaded: {scene.name}");
 
+        // ❌ ถ้าโหลดจาก save ปกติ และไม่ได้บังคับ spawn → ข้าม
+        if (!forceUseSpawnPoint &&
+            SaveManager.Instance != null &&
+            SaveManager.Instance.HasSave(PlayerPrefs.GetInt("CurrentSlot", -1)))
+        {
+            DebugLog("⛔ Skip SpawnManager (load from save)");
+            return;
+        }
+
+        // ✅ ใช้ SpawnPoint
         if (!string.IsNullOrEmpty(targetSpawnPointName))
         {
-            // เรียก coroutine ที่รอหลายเฟรมเพื่อหลีกเลี่ยง race condition
+            DebugLog($"🚪 Spawn via portal → {targetSpawnPointName}");
             StartCoroutine(SpawnPlayerNextFrame(targetSpawnPointName));
-            targetSpawnPointName = ""; // รีเซ็ตหลังใช้งาน
         }
-        else
-        {
-            DebugLog("ℹ️ No target spawn point - using default position");
-        }
+
+        // reset ทุกครั้ง
+        targetSpawnPointName = "";
+        forceUseSpawnPoint = false;
     }
+
+
+
 
     IEnumerator SpawnPlayerNextFrame(string spawnPointName)
     {
@@ -351,72 +367,3 @@ public class SpawnManager : MonoBehaviour
         StartCoroutine(SpawnPlayerNextFrame(spawnPointName));
     }
 }
-
-//## จุดเปลี่ยนแปลงสำหรับ 2.5D:
-
-//### 1. **ลบ Rigidbody2D และ Physics2D** - ใช้แค่ 3D
-//### 2. **เพิ่ม Lock Y Rotation** - สำหรับเกม 2.5D ที่ไม่ต้องการหมุน Y
-//### 3. **เพิ่ม Spawn Height** - ปรับความสูงได้ถ้าต้องการ
-//### 4. **ปรับ Interpolation** - ตั้งกลับหลังย้ายเสร็จ
-
-//## Setup Spawn Point ใน Unity:
-
-//### วิธีสร้าง Spawn Point ที่ถูกต้อง:
-//```
-//Scene Hierarchy:
-//├── SpawnPoints(Empty GameObject - Parent)
-//│   ├── SpawnPoint_FromA(Empty GameObject)
-//│   ├── SpawnPoint_FromB(Empty GameObject)
-//│   └── SpawnPoint_Default(Empty GameObject)
-//```
-
-//### การตั้งค่า Spawn Point:
-
-//1.สร้าง Empty GameObject
-//2. ตั้งชื่อเช่น `SpawnPoint_FromA`
-//3. ตั้งตำแหน่งที่ต้องการให้ Player spawn
-//4. **Rotation Y = 0** (หรือทิศทางที่ Player ควรหัน)
-
-//### ตัวอย่าง Scene Setup:
-
-//**Level1 (ฉากแรก):**
-//```
-//Scene: Level1
-//├── Player(Tag: Player, มี PlayerPersistence.cs)
-//├── SpawnPoint_Default(0, 0, 0)
-//├── Door_ToLevel2(มี SceneTrigger.cs)
-//│   -sceneToLoad: "Level2"
-//│   -targetSpawnPointName: "SpawnPoint_FromLevel1"
-//```
-
-//**Level2:**
-//```
-//Scene: Level2
-//├── SpawnPoint_FromLevel1(10, 0, 5) < -Player จะ spawn ตรงนี้
-//├── SpawnPoint_FromLevel3 (-5, 0, 8)
-//├── Door_BackToLevel1 (มี SceneTrigger.cs)
-//│   - sceneToLoad: "Level1"
-//│   -targetSpawnPointName: "SpawnPoint_FromLevel2"
-//```
-
-//## Inspector Settings:
-
-//### SpawnManager:
-//-**Wait Frames * *: 5(เพิ่มถ้ามีปัญหา race condition)
-//- **Debug Mode * *: ✅ (เปิดเพื่อดู log)
-//- **Lock Y Rotation**: ✅ (สำหรับ 2.5D)
-//-**Spawn Height * *: 0(ปรับถ้า Player ต้องการความสูงเพิ่ม)
-
-//### SceneTrigger:
-//- **Scene To Load**: `Level2`
-//- **Target Spawn Point Name**: `SpawnPoint_FromLevel1` (ต้องตรงกับชื่อใน Level2!)
-//- **Load Delay**: 1
-//- **Debug Mode * *: ✅
-
-//## Common Issues และวิธีแก้:
-
-//### 1. **Player ไม่ย้าย:**
-//```
-//ตรวจสอบ Console Log:
-//✅ "Found Spawn Point at: ..." < -ถ้าไม่เจอ = ชื่อไม่ตรงกัน
-//✅ "Player moved successfully!" < -ถ้าไม่มี = มีปัญหาใน MovePlayerToSpawn
