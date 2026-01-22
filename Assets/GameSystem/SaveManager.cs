@@ -86,17 +86,38 @@ public class SaveManager : MonoBehaviour
         float x = PlayerPrefs.GetFloat(PosKey(slot, "X"), player.position.x);
         float y = PlayerPrefs.GetFloat(PosKey(slot, "Y"), player.position.y);
         float z = PlayerPrefs.GetFloat(PosKey(slot, "Z"), player.position.z);
-
         Vector3 savedPos = new Vector3(x, y, z);
 
+        // 🆕 ต้องปิด CharacterController ก่อน!
         CharacterController controller = player.GetComponent<CharacterController>();
-        if (controller != null) controller.enabled = false;
+        Rigidbody rb = player.GetComponent<Rigidbody>();
 
+        // ปิด CharacterController
+        if (controller != null)
+        {
+            controller.enabled = false;
+            Debug.Log("🔒 Disabled CharacterController for teleport");
+        }
+
+        // Reset Rigidbody ถ้ามี
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+        }
+
+        // ตั้งตำแหน่ง
         player.position = savedPos;
 
-        if (controller != null) controller.enabled = true;
+        // Sync Physics
+        Physics.SyncTransforms();
 
-        
+        // เปิด CharacterController กลับ
+        if (controller != null)
+        {
+            controller.enabled = true;
+            Debug.Log("🔓 Enabled CharacterController");
+        }
 
         Debug.Log($"[LOAD APPLY] Pos = {player.position}");
     }

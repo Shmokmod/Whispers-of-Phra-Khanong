@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -13,14 +12,14 @@ public class LoadingScreen : MonoBehaviour
     [SerializeField] private Image fadeImage;
     [SerializeField] private Text loadingText;
     [SerializeField] private GameObject loadingSpinner;
-    [SerializeField] private Canvas fadeCanvas; // เพิ่ม: ต้อง assign Canvas ที่เป็น parent
+    [SerializeField] private Canvas fadeCanvas;
 
     [Header("Settings")]
-    [SerializeField] private float fadeDuration = 1f; // เพิ่มเป็น 1 วินาที
-    [SerializeField] private float minFadeOutDuration = 0.5f; // ระยะเวลาขั้นต่ำที่ต้องเห็น fade
+    [SerializeField] private float fadeDuration = 1f;
+    [SerializeField] private float minFadeOutDuration = 0.5f;
     [SerializeField] private float spinnerSpeed = 200f;
     [SerializeField] private bool debugMode = true;
-    [SerializeField] private float holdBlackAfterLoad = 1f; // เวลาค้างจอดำ
+    [SerializeField] private float holdBlackAfterLoad = 1f;
 
     private bool isLoading = false;
     private Coroutine currentFadeCoroutine = null;
@@ -35,7 +34,7 @@ public class LoadingScreen : MonoBehaviour
         }
 
         Instance = this;
-        //DontDestroyOnLoad(gameObject); // ⚠️ เปิดใช้งาน!
+        //DontDestroyOnLoad(gameObject);
 
         ValidateReferences();
         SetupCanvas();
@@ -73,7 +72,7 @@ public class LoadingScreen : MonoBehaviour
         if (fadeCanvas != null)
         {
             fadeCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            fadeCanvas.sortingOrder = 9999; // ให้แสดงบนสุด
+            fadeCanvas.sortingOrder = 9999;
             DebugLog($"✅ Canvas setup complete - Sort Order: {fadeCanvas.sortingOrder}");
         }
     }
@@ -82,12 +81,10 @@ public class LoadingScreen : MonoBehaviour
     {
         if (fadeImage != null)
         {
-            // ตั้งค่าเริ่มต้นให้โปร่งใส
             Color c = fadeImage.color;
             c.a = 0f;
             fadeImage.color = c;
 
-            // ตรวจสอบ RectTransform
             RectTransform rt = fadeImage.GetComponent<RectTransform>();
             if (rt != null)
             {
@@ -109,26 +106,24 @@ public class LoadingScreen : MonoBehaviour
         if (!isLoading) return;
         if (scene.name == "_PersistentManagers") return;
 
-        // 🔗 bind กล้อง
-        var cam = Object.FindAnyObjectByType<CinemachineCamera>();
-        if (cam != null)
-            cam.Follow = PlayerPersistence.Instance.transform;
-
         DebugLog($"🎬 Scene Loaded: {scene.name}");
+
+        // ✅ ให้ SpawnManager จัดการ Player ทั้งหมด
+        // LoadingScreen แค่ทำ Fade In/Out
+
         StartCoroutine(CompleteLoadingSequence());
     }
-
 
     private IEnumerator CompleteLoadingSequence()
     {
         yield return new WaitForEndOfFrame();
-        yield return new WaitForSeconds(0.1f);
 
-        // 👉 ค้างจอดำ
+        // รอให้ SpawnManager ทำงานเสร็จ
+        yield return new WaitForSeconds(0.2f);
+
         DebugLog($"⏸ Hold black screen {holdBlackAfterLoad}s");
         yield return new WaitForSeconds(holdBlackAfterLoad);
 
-        // 👉 ค่อย Fade In
         DebugLog("☀️ Fade IN start");
         yield return StartCoroutine(Fade(1f, 0f, fadeDuration));
 
@@ -138,7 +133,6 @@ public class LoadingScreen : MonoBehaviour
         isLoading = false;
         DebugLog("✅ Load Complete - UI hidden");
     }
-
 
     // -------------------- Public API --------------------
     public IEnumerator LoadScene(string sceneName)
@@ -157,11 +151,9 @@ public class LoadingScreen : MonoBehaviour
 
         isLoading = true;
 
-        // แสดง UI
         if (loadingPanel != null)
             loadingPanel.SetActive(true);
 
-        // ตั้งค่า fadeImage ให้โปร่งใสก่อน
         if (fadeImage != null)
         {
             Color c = fadeImage.color;
@@ -169,12 +161,10 @@ public class LoadingScreen : MonoBehaviour
             fadeImage.color = c;
         }
 
-        // เริ่ม Fade OUT
         DebugLog("🌑 Fade OUT start");
         float fadeStartTime = Time.time;
         yield return StartCoroutine(Fade(0f, 1f, fadeDuration));
 
-        // รับรองว่า fade อย่างน้อย minFadeOutDuration
         float fadeElapsed = Time.time - fadeStartTime;
         if (fadeElapsed < minFadeOutDuration)
         {
@@ -203,7 +193,6 @@ public class LoadingScreen : MonoBehaviour
             yield break;
         }
 
-        // หยุด coroutine เก่าถ้ามี
         if (currentFadeCoroutine != null)
         {
             StopCoroutine(currentFadeCoroutine);
@@ -223,7 +212,6 @@ public class LoadingScreen : MonoBehaviour
             yield return null;
         }
 
-        // ตั้งค่าสุดท้ายให้แน่ใจ
         c.a = to;
         fadeImage.color = c;
 

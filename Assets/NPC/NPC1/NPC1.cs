@@ -126,6 +126,8 @@ public class NPC : MonoBehaviour, IInteractable
                 StopAllCoroutines();
                 dialogueUI.SetDialogueText(dialogueData.dialogueLines[dialogueIndex]);
                 isTyping = false;
+
+                NextLine(); // auto ไปบรรทัดถัดไป
             }
             else
             {
@@ -133,6 +135,7 @@ public class NPC : MonoBehaviour, IInteractable
             }
         }
     }
+
 
 
     private void InitializeDialogue()
