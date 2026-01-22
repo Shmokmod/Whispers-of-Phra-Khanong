@@ -17,4 +17,7 @@ MonoBehaviour:
   content: "\u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14\u0E40\u0E1A\u0E32\u0E30\u0E41\u0E2A..."
   orderIndex: 6
   noteImage: {fileID: 0}
-  unlockConditions: []
+  unlockConditions:
+  - type: 4
+    targetID: Hint-Floor
+    dialogueIndex: 0

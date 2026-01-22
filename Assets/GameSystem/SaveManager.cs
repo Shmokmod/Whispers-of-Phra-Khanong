@@ -9,6 +9,9 @@ public class SaveManager : MonoBehaviour
     string SceneKey(int slot) => $"SAVE_SCENE_{slot}";
     string PosKey(int slot, string axis) => $"SAVE_POS_{slot}_{axis}";
 
+ 
+
+    public bool IsLoading { get; private set; }
     void Awake()
     {
         if (Instance == null)
@@ -21,6 +24,13 @@ public class SaveManager : MonoBehaviour
             Destroy(gameObject);
         }
     }
+
+
+    public void FinishLoading()
+    {
+        IsLoading = false;
+    }
+
 
     // ===== CHECK =====
     public bool HasSave(int slot)
@@ -41,6 +51,8 @@ public class SaveManager : MonoBehaviour
     public void ContinueGame(int slot)
     {
         if (!HasSave(slot)) return;
+
+        IsLoading = true;
 
         PlayerPrefs.SetInt("CurrentSlot", slot);
         string scene = PlayerPrefs.GetString(SceneKey(slot), "GameScene");
@@ -78,16 +90,17 @@ public class SaveManager : MonoBehaviour
         Vector3 savedPos = new Vector3(x, y, z);
 
         CharacterController controller = player.GetComponent<CharacterController>();
-        if (controller != null)
-            controller.enabled = false;   // ⬅️ สำคัญมาก
+        if (controller != null) controller.enabled = false;
 
         player.position = savedPos;
 
-        if (controller != null)
-            controller.enabled = true;    // ⬅️ สำคัญมาก
+        if (controller != null) controller.enabled = true;
+
+        
 
         Debug.Log($"[LOAD APPLY] Pos = {player.position}");
     }
+
 
 
     // ===== DELETE =====

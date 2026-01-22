@@ -43,16 +43,36 @@ public class NPC : MonoBehaviour, IInteractable
     // ===============================
     private void Start()
     {
+        // ⬇️ รอให้แน่ใจว่า DialogueController พร้อมใช้งาน
+        if (DialogueController.instance == null)
+        {
+            Debug.LogError($"[NPC] {gameObject.name} - DialogueController.instance is NULL!");
+            return;
+        }
+
         dialogueUI = DialogueController.instance;
-        cutsceneController = CutsceneController.instance;
+
+        if (CutsceneController.instance != null)
+        {
+            cutsceneController = CutsceneController.instance;
+        }
+        else
+        {
+            Debug.LogWarning($"[NPC] {gameObject.name} - CutsceneController not found");
+        }
+
         animator = GetComponent<Animator>();
 
         // ตั้ง sprite เริ่มต้น
-        if (dialogueUI.npcPortraitImage != null &&
-            dialogueUI.npcPortraitImage.sprite == null)
+        if (dialogueUI != null &&
+            dialogueUI.npcPortraitImage != null &&
+            dialogueUI.npcPortraitImage.sprite == null &&
+            defaultSprite != null)
         {
             dialogueUI.npcPortraitImage.sprite = defaultSprite;
         }
+
+        Debug.Log($"[NPC] {gameObject.name} initialized successfully");
     }
 
     // ===============================
@@ -60,30 +80,34 @@ public class NPC : MonoBehaviour, IInteractable
     // ===============================
     public void Interact()
     {
-        if (dialogueData == null) return;
-        if (PauseController.isPaused && !isDialogueActive) return;
+        // ⬇️ ตรวจสอบ dialogueUI ก่อนใช้งาน
+        if (dialogueUI == null)
+        {
+            Debug.LogError($"[NPC] {gameObject.name} - dialogueUI is NULL! Re-finding...");
+            dialogueUI = DialogueController.instance;
+
+            if (dialogueUI == null)
+            {
+                Debug.LogError("[NPC] Cannot find DialogueController!");
+                return;
+            }
+        }
+
+        if (dialogueData == null)
+        {
+            Debug.LogWarning($"[NPC] {gameObject.name} - No dialogue data!");
+            return;
+        }
+
+        if (PauseController.isPaused && !isDialogueActive)
+        {
+            return;
+        }
 
         if (isDialogueActive)
             NextLine();
         else
             StartDialogue();
-    }
-
-    // ===============================
-    // Dialogue Flow
-    // ===============================
-    private void StartDialogue()
-    {
-        // Cutscene ก่อนเริ่มบทสนทนา
-        var beforeCutscenes = GetCutscenesByTiming(CutsceneTiming.BeforeDialogue);
-        if (beforeCutscenes.Length > 0)
-        {
-            PlayCutscenesSequentially(beforeCutscenes, InitializeDialogue);
-        }
-        else
-        {
-            InitializeDialogue();
-        }
     }
 
     private void InitializeDialogue()
@@ -98,6 +122,11 @@ public class NPC : MonoBehaviour, IInteractable
         Time.timeScale = 0f;
 
         DisplayCurrentLine();
+    }
+
+    private void StartDialogue()
+    {
+        InitializeDialogue();
     }
 
     private void NextLine()

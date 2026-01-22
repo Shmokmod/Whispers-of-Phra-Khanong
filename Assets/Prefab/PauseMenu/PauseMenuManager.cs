@@ -28,18 +28,12 @@ public class PauseMenuManager : MonoBehaviour
 
     public void BackMainMenu()
     {
-        Debug.Log("🔥 BackMainMenu CLICKED");
-        Time.timeScale = 1f;
-        if (LoadingScreen.Instance == null)
-        {
-            Debug.LogError("❌ LoadingScreen.Instance == NULL");
-            return;
-        }
+        Pause.ResumeGame();   // 🔴 สำคัญ
 
-        Debug.Log("✅ LoadingScreen found");
+        Time.timeScale = 1f;
         StartCoroutine(LoadingScreen.Instance.LoadScene("Mainmenu"));
-        GamePauseUI.SetActive(false);
     }
+
 
 
     public void ApplicationQuit()

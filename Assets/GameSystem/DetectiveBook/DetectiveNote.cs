@@ -28,11 +28,13 @@ public class UnlockCondition
 {
     public enum ConditionType
     {
-        DialogueReached,    // ถึงบรรทัด dialogue ที่กำหนด
-        EvidenceUnlocked,   // ได้ evidence
-        StatementUnlocked,  // ได้ statement
-        NoteUnlocked        // note อื่นถูก unlock
+        DialogueReached,
+        EvidenceUnlocked,
+        StatementUnlocked,
+        NoteUnlocked,
+        HintInteracted   // ✅ เพิ่ม
     }
+
 
     [Header("Condition Settings")]
     public ConditionType type;

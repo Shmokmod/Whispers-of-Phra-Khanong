@@ -17,6 +17,7 @@ public class DetectiveBookManager : MonoBehaviour
     [Header("Runtime Data")]
     private HashSet<string> unlockedNoteIDs = new HashSet<string>();
     public HashSet<string> reachedDialogueKeys = new HashSet<string>(); // "dialogueID_index"
+    private HashSet<string> interactedHints = new HashSet<string>();
 
     [Header("Events")]
     public System.Action<DetectiveNote> OnNoteUnlocked;
@@ -44,20 +45,24 @@ public class DetectiveBookManager : MonoBehaviour
         OnNoteUnlocked += ShowNoteNotification;
 
         if (Instance == null)
-        {
             Instance = this;
-            //DontDestroyOnLoad(gameObject); // ⬇️ เอา comment ออก!
-        }
         else
         {
             Destroy(gameObject);
             return;
         }
 
-        LoadUnlockedNotes();
+        // ❌ LoadUnlockedNotes(); เอาออก
     }
 
+
     // ==================== Unlock Logic ====================
+    public void InitAfterSlotSelected()
+    {
+        unlockedNoteIDs.Clear();
+        reachedDialogueKeys.Clear();
+        LoadUnlockedNotes();
+    }
 
     void ShowNoteNotification(DetectiveNote note)
     {
@@ -278,7 +283,8 @@ public class DetectiveBookManager : MonoBehaviour
         var data = new SaveData
         {
             unlockedNoteIDs = unlockedNoteIDs.ToList(),
-            reachedDialogueKeys = reachedDialogueKeys.ToList()
+            reachedDialogueKeys = reachedDialogueKeys.ToList(),
+            interactedHints = interactedHints.ToList()
         };
 
         string json = JsonUtility.ToJson(data);
@@ -302,7 +308,7 @@ public class DetectiveBookManager : MonoBehaviour
 
         unlockedNoteIDs = new HashSet<string>(data.unlockedNoteIDs);
         reachedDialogueKeys = new HashSet<string>(data.reachedDialogueKeys);
-
+        interactedHints = new HashSet<string>(data.interactedHints);
         Debug.Log($"📘 Loaded {unlockedNoteIDs.Count} unlocked notes.");
     }
 
@@ -315,6 +321,14 @@ public class DetectiveBookManager : MonoBehaviour
         Debug.Log("🗑️ Detective Book progress cleared.");
     }
 
+    public void MarkHintInteracted(string hintID)
+    {
+        if (interactedHints.Add(hintID))
+        {
+            Debug.Log($"🕵️ Hint Interacted: {hintID}");
+            TryUnlockNotes();
+        }
+    }
 
 
     //==================== Tutorial ====================
@@ -348,5 +362,7 @@ public class DetectiveBookManager : MonoBehaviour
     {
         public List<string> unlockedNoteIDs;
         public List<string> reachedDialogueKeys;
+        public List<string> interactedHints;
+
     }
 }

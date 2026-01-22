@@ -8,28 +8,56 @@ public class PauseController : MonoBehaviour
 
     void Update()
     {
+        if (DialogueController.IsDialogueActive)
+            return;
+
         if (Input.GetKeyDown(KeyCode.Escape))
         {
             if (isPaused)
                 ResumeGame();
             else
                 PauseGame();
-                print(isPaused);
+            print(isPaused);
         }
+
+
+
+
+        //if (SceneManager.GetActiveScene().name.Contains("Mainmenu"))
+        //{
+        //    isPaused = false;
+        //    Time.timeScale = 1f;
+        //    return;
+        //}
+
+    }
+
+    public void Awake()
+    {
+        isPaused = false;
+        Time.timeScale = 1f;
+
     }
 
     public void PauseGame()
     {
-        if (SceneManager.GetActiveScene().name == "Mainmenu")
+        if (SceneManager.GetActiveScene().name.Contains("Mainmenu"))
         {
-            pauseMenuUI.SetActive(false);
+            PauseController.isPaused = false;
+            Time.timeScale = 1f;
+
+            if (pauseMenuUI != null)
+                pauseMenuUI.SetActive(false);
+
             return;
         }
 
-        pauseMenuUI.SetActive(true);
-        Time.timeScale = 0f;
-        isPaused = true;
+        PauseController.isPaused = !PauseController.isPaused;
+        Time.timeScale = PauseController.isPaused ? 0f : 1f;
+
+        pauseMenuUI.SetActive(PauseController.isPaused);
     }
+
 
     public void ResumeGame()
     {

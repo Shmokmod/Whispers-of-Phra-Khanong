@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &4618150716647867730
+--- !u!1 &6225485533624032862
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,8 +8,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 4251857187074114860}
-  - component: {fileID: 6945415389715866292}
+  - component: {fileID: 3143921588045315514}
+  - component: {fileID: 1006114732044829514}
   m_Layer: 0
   m_Name: DialogueController
   m_TagString: Untagged
@@ -17,44 +17,44 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &4251857187074114860
+--- !u!4 &3143921588045315514
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4618150716647867730}
+  m_GameObject: {fileID: 6225485533624032862}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1024.7327, y: 0, z: 295.15543}
+  m_LocalPosition: {x: 178.72426, y: 0, z: -62.62154}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &6945415389715866292
+--- !u!114 &1006114732044829514
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4618150716647867730}
+  m_GameObject: {fileID: 6225485533624032862}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b9542857b20bc2c48b1de22322052c3d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DialogueController
-  dialogueUI: {fileID: 0}
-  dialogueText: {fileID: 0}
-  nameText: {fileID: 0}
-  choiceContainer: {fileID: 0}
+  dialogueUI: {fileID: 657675064908342421, guid: bcb3f0621fbe1e140b12620e92631418, type: 3}
+  dialogueText: {fileID: 1055360181455765252, guid: b854ac578baaed14282c444e2e282520, type: 3}
+  nameText: {fileID: 6207813248606407415, guid: 0a0bbb64bec697b468ea55cd21698b80, type: 3}
+  choiceContainer: {fileID: 1177635245721649834, guid: 81382280daeb8b445bb3f193c8bdf7c3, type: 3}
   choiceButtonPrefab: {fileID: 5426105070922994523, guid: 0572c16dd22a38946acaaf94d341fbbd, type: 3}
-  leftPortraitImage: {fileID: 0}
-  leftPortraitCanvasGroup: {fileID: 0}
-  leftPortraitRect: {fileID: 0}
-  rightPortraitImage: {fileID: 0}
-  rightPortraitCanvasGroup: {fileID: 0}
-  rightPortraitRect: {fileID: 0}
+  leftPortraitImage: {fileID: 2676218745435116543, guid: 8f98f3486d409174bba41a5c1425af8b, type: 3}
+  leftPortraitCanvasGroup: {fileID: 2458449423751701995, guid: 8f98f3486d409174bba41a5c1425af8b, type: 3}
+  leftPortraitRect: {fileID: 6943365774350669632, guid: 8f98f3486d409174bba41a5c1425af8b, type: 3}
+  rightPortraitImage: {fileID: 4818344090097146241, guid: a441d9fb27b7c634bade47fa8ce6c5e7, type: 3}
+  rightPortraitCanvasGroup: {fileID: 1118387768751901130, guid: a441d9fb27b7c634bade47fa8ce6c5e7, type: 3}
+  rightPortraitRect: {fileID: 2084813989611862091, guid: a441d9fb27b7c634bade47fa8ce6c5e7, type: 3}
   fadeDuration: 0.3
   activeSpeakerAlpha: 1
   inactiveSpeakerAlpha: 0.5

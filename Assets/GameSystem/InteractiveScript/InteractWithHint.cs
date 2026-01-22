@@ -128,6 +128,20 @@ public class InteractWithHint : MonoBehaviour, IInteractable
         }
     }
 
+    public class HintInteract : MonoBehaviour
+    {
+        public string hintID;
+
+        void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                DetectiveBookManager.Instance.MarkHintInteracted(hintID);
+                GetComponent<Collider>().enabled = false;
+            }
+        }
+    }
+
     public void SetOpened(bool opened)
     {
         isOpened = opened;

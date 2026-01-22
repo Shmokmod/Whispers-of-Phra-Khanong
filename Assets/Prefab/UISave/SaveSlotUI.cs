@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class SaveSlotUI : MonoBehaviour
 {
@@ -41,13 +41,24 @@ public class SaveSlotUI : MonoBehaviour
     // ===== BUTTON EVENTS =====
     public void NewGame(int slot)
     {
+        PlayerPrefs.SetInt("CurrentSlot", slot);
+
+        DetectiveBookManager.Instance.ClearAllProgress();      // เคลียร์ของ slot นี้
+        DetectiveBookManager.Instance.InitAfterSlotSelected(); // init หลังเลือก slot
+
         SaveManager.Instance.NewGame(slot);
     }
 
+
     public void ContinueGame(int slot)
     {
+        PlayerPrefs.SetInt("CurrentSlot", slot);
+
+        DetectiveBookManager.Instance.InitAfterSlotSelected(); // โหลดตาม slot
+
         SaveManager.Instance.ContinueGame(slot);
     }
+
 
     public void DeleteSlot(int slot)
     {

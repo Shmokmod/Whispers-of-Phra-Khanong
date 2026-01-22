@@ -6489,6 +6489,10 @@ PrefabInstance:
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
       value: SaveSlotUI, Assembly-CSharp
       objectReference: {fileID: 0}
+    - target: {fileID: 2884650443668595392, guid: f6890fe2ca7bf334b8a3e9ad6d51d870, type: 3}
+      propertyPath: m_text
+      value: "\u0E40\u0E25\u0E48\u0E19\u0E15\u0E48\u0E2D"
+      objectReference: {fileID: 0}
     - target: {fileID: 4439547127216227251, guid: f6890fe2ca7bf334b8a3e9ad6d51d870, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 

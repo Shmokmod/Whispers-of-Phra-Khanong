@@ -1,12 +1,19 @@
-﻿using TMPro;
+﻿using DG.Tweening;
+using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using DG.Tweening;
 
 public class DialogueController : MonoBehaviour
 {
+    /* =========================================================
+     *  Singleton
+     * ========================================================= */
     public static DialogueController instance { get; private set; }
 
+    /* =========================================================
+     *  UI Elements
+     * ========================================================= */
     [Header("UI Elements")]
     public GameObject dialogueUI;
     public TMP_Text dialogueText;
@@ -14,16 +21,25 @@ public class DialogueController : MonoBehaviour
     public Transform choiceContainer;
     public GameObject choiceButtonPrefab;
 
+    /* =========================================================
+     *  Portrait System - Left
+     * ========================================================= */
     [Header("Portrait System - Left")]
     public Image leftPortraitImage;
     public CanvasGroup leftPortraitCanvasGroup;
     public RectTransform leftPortraitRect;
 
+    /* =========================================================
+     *  Portrait System - Right
+     * ========================================================= */
     [Header("Portrait System - Right")]
     public Image rightPortraitImage;
     public CanvasGroup rightPortraitCanvasGroup;
     public RectTransform rightPortraitRect;
 
+    /* =========================================================
+     *  Portrait Settings
+     * ========================================================= */
     [Header("Portrait Settings")]
     public float fadeDuration = 0.3f;
     public float activeSpeakerAlpha = 1f;
@@ -31,49 +47,145 @@ public class DialogueController : MonoBehaviour
     public Vector2 activeScale = new Vector2(1.05f, 1.05f);
     public Vector2 inactiveScale = Vector2.one;
 
+    /* =========================================================
+     *  Runtime
+     * ========================================================= */
     [HideInInspector] public Image npcPortraitImage;
-
     private SpeakerPosition currentActiveSpeaker = SpeakerPosition.None;
 
+
+
+    public static bool IsDialogueActive { get; private set; }
+
+    /* =========================================================
+     *  Unity Life Cycle
+     * ========================================================= */
     void Awake()
     {
-        if (instance == null) instance = this;
-        else Destroy(gameObject);
+        Debug.Log("[Dialogue] Awake - Scene: " + UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
 
-        npcPortraitImage = leftPortraitImage;
+        // ⬇️ เพิ่มการจัดการ Singleton แบบไม่ DontDestroyOnLoad
+        if (instance != null && instance != this)
+        {
+            Debug.LogWarning("[Dialogue] Duplicate instance found - destroying old instance");
+            Destroy(instance.gameObject);
+        }
+
+
+        if (SceneManager.GetActiveScene().name.Contains("Mainmenu"))
+        {
+            gameObject.SetActive(false);
+            return;
+        }
+
+
+        instance = this;
+
+        // ⬇️ เพิ่มการ initialize พื้นฐาน
+        if (leftPortraitImage != null)
+            npcPortraitImage = leftPortraitImage;
+
+        Debug.Log("[Dialogue] Awake completed - instance set");
     }
 
     void Start()
     {
-        // ✅ ซ่อน GameObject ตอนเริ่มต้น
-        if (leftPortraitImage != null)
+        Debug.Log("[Dialogue] Start - initializing UI");
+
+        // ซ่อน Portrait ตอนเริ่ม
+        InitPortrait(leftPortraitImage, leftPortraitCanvasGroup);
+        InitPortrait(rightPortraitImage, rightPortraitCanvasGroup);
+
+        // ⬇️ ซ่อน Dialogue UI ตอนเริ่ม
+        if (dialogueUI != null)
         {
-            leftPortraitImage.gameObject.SetActive(false);
-            if (leftPortraitCanvasGroup != null)
-                leftPortraitCanvasGroup.alpha = 0f;
+            dialogueUI.SetActive(false);
+            IsDialogueActive = false;
+
         }
 
-        if (rightPortraitImage != null)
+        Debug.Log("[Dialogue] Start completed");
+    }
+
+    void OnDestroy()
+    {
+        Debug.Log("[Dialogue] OnDestroy called");
+
+        // ⬇️ ทำความสะอาด instance
+        if (instance == this)
         {
-            rightPortraitImage.gameObject.SetActive(false);
-            if (rightPortraitCanvasGroup != null)
-                rightPortraitCanvasGroup.alpha = 0f;
+            instance = null;
         }
     }
 
-    public void ShowDialogue(bool Show)
+    /* =========================================================
+     *  Dialogue Core
+     * ========================================================= */
+    public void ShowDialogue(bool show)
     {
-        dialogueUI.SetActive(Show);
+        Debug.Log($"[Dialogue] ShowDialogue({show})");
+
+        if (dialogueUI != null)
+        {
+            dialogueUI.SetActive(show);
+            IsDialogueActive = true;
+        }
+        else
+        {
+            Debug.LogError("[Dialogue] dialogueUI is NULL!");
+        }
     }
 
     public void SetDialogueText(string text)
     {
-        dialogueText.text = text;
+        Debug.Log($"[Dialogue] SetDialogueText called | UI Active = {dialogueUI?.activeSelf}");
+        Debug.Log($"[Dialogue] Text = \"{text}\"");
+
+        if (dialogueUI != null && !dialogueUI.activeSelf)
+        {
+            Debug.LogWarning("[Dialogue] DialogueUI is INACTIVE when setting text");
+        }
+
+        if (dialogueText != null)
+        {
+            dialogueText.text = text;
+        }
+        else
+        {
+            Debug.LogError("[Dialogue] dialogueText is NULL!");
+        }
+    }
+
+    public void SetSpeakerName(string name)
+    {
+        Debug.Log($"[Dialogue] SetSpeakerName = {name}");
+        if (nameText != null)
+            nameText.text = name;
+    }
+
+    public void ResumeDialogue()
+    {
+        Debug.Log("[Dialogue] ResumeDialogue");
+        ShowDialogue(true);
+    }
+
+    /* =========================================================
+     *  Portrait Control
+     * ========================================================= */
+    void InitPortrait(Image img, CanvasGroup cg)
+    {
+        if (img != null)
+        {
+            img.gameObject.SetActive(false);
+            if (cg != null) cg.alpha = 0f;
+        }
     }
 
     public void SetNPCinfo(string npcName, Sprite portrait)
     {
+        Debug.Log($"[Dialogue] SetNPCinfo: {npcName}");
         SetSpeakerName(npcName);
+
         if (leftPortraitImage != null)
         {
             leftPortraitImage.sprite = portrait;
@@ -81,69 +193,35 @@ public class DialogueController : MonoBehaviour
         }
     }
 
-    public void SetSpeakerName(string name)
-    {
-        if (nameText != null)
-            nameText.text = name;
-    }
-
     public void SetupPortraits(Sprite leftSprite, Sprite rightSprite)
     {
-        Debug.Log("=== SetupPortraits Called ===");
+        Debug.Log("[Dialogue] SetupPortraits");
 
-        if (leftPortraitImage != null && leftSprite != null)
+        SetupSinglePortrait(leftPortraitImage, leftPortraitCanvasGroup, leftPortraitRect, leftSprite, "Left");
+        SetupSinglePortrait(rightPortraitImage, rightPortraitCanvasGroup, rightPortraitRect, rightSprite, "Right");
+    }
+
+    void SetupSinglePortrait(Image img, CanvasGroup cg, RectTransform rt, Sprite sprite, string side)
+    {
+        if (img == null || sprite == null)
         {
-            leftPortraitImage.sprite = leftSprite;
-            leftPortraitImage.SetNativeSize();
-            leftPortraitImage.gameObject.SetActive(true); // ✅ Force Active
-
-            Debug.Log($"Left Portrait Set: {leftSprite.name}");
-
-            if (leftPortraitCanvasGroup != null)
-            {
-                leftPortraitCanvasGroup.alpha = 1f; // ✅ ทดสอบให้เด่นเลย
-                Debug.Log($"Left Alpha: {leftPortraitCanvasGroup.alpha}");
-
-                if (leftPortraitRect != null)
-                {
-                    leftPortraitRect.localScale = Vector3.one; // ✅ Scale ปกติ
-                    Debug.Log($"Left Scale: {leftPortraitRect.localScale}");
-                }
-            }
-        }
-        else
-        {
-            Debug.LogWarning("Left Portrait Image or Sprite is NULL!");
+            Debug.LogWarning($"[Dialogue] {side} portrait missing");
+            return;
         }
 
-        if (rightPortraitImage != null && rightSprite != null)
-        {
-            rightPortraitImage.sprite = rightSprite;
-            rightPortraitImage.SetNativeSize();
-            rightPortraitImage.gameObject.SetActive(true); // ✅ Force Active
+        Debug.Log($"[Dialogue] {side} portrait = {sprite.name}");
+        img.sprite = sprite;
+        img.SetNativeSize();
+        img.gameObject.SetActive(true);
 
-            Debug.Log($"Right Portrait Set: {rightSprite.name}");
-
-            if (rightPortraitCanvasGroup != null)
-            {
-                rightPortraitCanvasGroup.alpha = 1f; // ✅ ทดสอบให้เด่นเลย
-                Debug.Log($"Right Alpha: {rightPortraitCanvasGroup.alpha}");
-
-                if (rightPortraitRect != null)
-                {
-                    rightPortraitRect.localScale = Vector3.one; // ✅ Scale ปกติ
-                    Debug.Log($"Right Scale: {rightPortraitRect.localScale}");
-                }
-            }
-        }
-        else
-        {
-            Debug.LogWarning("Right Portrait Image or Sprite is NULL!");
-        }
+        if (cg != null) cg.alpha = 1f;
+        if (rt != null) rt.localScale = Vector3.one;
     }
 
     public void SetActiveSpeaker(SpeakerPosition position)
     {
+        Debug.Log($"[Dialogue] SetActiveSpeaker = {position}");
+
         if (position == currentActiveSpeaker)
             return;
 
@@ -168,138 +246,71 @@ public class DialogueController : MonoBehaviour
         }
     }
 
-    void HighlightSpeaker(CanvasGroup canvasGroup, RectTransform rectTransform)
+    void HighlightSpeaker(CanvasGroup cg, RectTransform rt)
     {
-        if (canvasGroup == null) return;
+        Debug.Log("[Dialogue] HighlightSpeaker");
+        if (cg == null) return;
 
-        if (Application.isPlaying && canvasGroup.gameObject.activeInHierarchy)
-        {
-            canvasGroup.DOFade(activeSpeakerAlpha, fadeDuration).SetUpdate(true);
-            if (rectTransform != null)
-                rectTransform.DOScale(activeScale, fadeDuration).SetUpdate(true);
-        }
-        else
-        {
-            canvasGroup.alpha = activeSpeakerAlpha;
-            if (rectTransform != null)
-                rectTransform.localScale = activeScale;
-        }
+        cg.DOFade(activeSpeakerAlpha, fadeDuration).SetUpdate(true);
+        if (rt != null) rt.DOScale(activeScale, fadeDuration).SetUpdate(true);
     }
 
-    void FadeSpeaker(CanvasGroup canvasGroup, RectTransform rectTransform)
+    void FadeSpeaker(CanvasGroup cg, RectTransform rt)
     {
-        if (canvasGroup == null) return;
+        Debug.Log("[Dialogue] FadeSpeaker");
+        if (cg == null) return;
 
-        if (Application.isPlaying && canvasGroup.gameObject.activeInHierarchy)
-        {
-            canvasGroup.DOFade(inactiveSpeakerAlpha, fadeDuration).SetUpdate(true);
-            if (rectTransform != null)
-                rectTransform.DOScale(inactiveScale, fadeDuration).SetUpdate(true);
-        }
-        else
-        {
-            canvasGroup.alpha = inactiveSpeakerAlpha;
-            if (rectTransform != null)
-                rectTransform.localScale = inactiveScale;
-        }
+        cg.DOFade(inactiveSpeakerAlpha, fadeDuration).SetUpdate(true);
+        if (rt != null) rt.DOScale(inactiveScale, fadeDuration).SetUpdate(true);
     }
 
     public void HideAllPortraits()
     {
-        // ✅ ซ่อน GameObject แทนการใช้ Alpha
-        if (leftPortraitImage != null)
-        {
-            if (Application.isPlaying && leftPortraitImage.gameObject.activeInHierarchy)
-            {
-                leftPortraitCanvasGroup?.DOFade(0f, fadeDuration).SetUpdate(true).OnComplete(() =>
-                {
-                    leftPortraitImage.gameObject.SetActive(false);
-                });
-            }
-            else
-            {
-                leftPortraitImage.gameObject.SetActive(false);
-            }
-        }
+        Debug.Log("[Dialogue] HideAllPortraits");
 
-        if (rightPortraitImage != null)
-        {
-            if (Application.isPlaying && rightPortraitImage.gameObject.activeInHierarchy)
-            {
-                rightPortraitCanvasGroup?.DOFade(0f, fadeDuration).SetUpdate(true).OnComplete(() =>
-                {
-                    rightPortraitImage.gameObject.SetActive(false);
-                });
-            }
-            else
-            {
-                rightPortraitImage.gameObject.SetActive(false);
-            }
-        }
+        if (leftPortraitImage != null) leftPortraitImage.gameObject.SetActive(false);
+        if (rightPortraitImage != null) rightPortraitImage.gameObject.SetActive(false);
 
         currentActiveSpeaker = SpeakerPosition.None;
     }
 
+    /* =========================================================
+     *  Choices
+     * ========================================================= */
     public void ClearChoices()
     {
-        foreach (Transform child in choiceContainer)
+        Debug.Log("[Dialogue] ClearChoices");
+
+        if (choiceContainer == null)
         {
-            Destroy(child.gameObject);
+            Debug.LogError("[Dialogue] choiceContainer is NULL!");
+            return;
         }
+
+        foreach (Transform child in choiceContainer)
+            Destroy(child.gameObject);
     }
 
     public GameObject CreateChoiceButton(string choiceText, UnityEngine.Events.UnityAction onClickAction)
     {
-        // ✅ เพิ่มการตรวจสอบ null
+        Debug.Log($"[Dialogue] CreateChoiceButton = {choiceText}");
+
         if (choiceButtonPrefab == null)
         {
-            Debug.LogError("Choice Button Prefab is not assigned in DialogueController!");
+            Debug.LogError("[Dialogue] choiceButtonPrefab is NULL!");
             return null;
         }
 
         if (choiceContainer == null)
         {
-            Debug.LogError("Choice Container is not assigned in DialogueController!");
+            Debug.LogError("[Dialogue] choiceContainer is NULL!");
             return null;
         }
 
         GameObject choiceButton = Instantiate(choiceButtonPrefab, choiceContainer);
-
-        if (choiceButton == null)
-        {
-            Debug.LogError("Failed to instantiate choice button!");
-            return null;
-        }
-
-        // ✅ ตรวจสอบ TMP_Text
-        TMP_Text buttonText = choiceButton.GetComponentInChildren<TMP_Text>();
-        if (buttonText != null)
-        {
-            buttonText.text = choiceText;
-        }
-        else
-        {
-            Debug.LogWarning("No TMP_Text found in choice button prefab!");
-        }
-
-        // ✅ ตรวจสอบ Button
-        Button button = choiceButton.GetComponent<Button>();
-        if (button != null)
-        {
-            button.onClick.AddListener(onClickAction);
-        }
-        else
-        {
-            Debug.LogWarning("No Button component found in choice button prefab!");
-        }
+        choiceButton.GetComponentInChildren<TMP_Text>().text = choiceText;
+        choiceButton.GetComponent<Button>().onClick.AddListener(onClickAction);
 
         return choiceButton;
     }
-
-    // ใส่ไว้ท้ายคลาส DialogueController
-public void ResumeDialogue()
-{
-    ShowDialogue(true);
-}
-
 }
