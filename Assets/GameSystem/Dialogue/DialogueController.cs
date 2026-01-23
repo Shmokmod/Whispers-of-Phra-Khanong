@@ -128,13 +128,10 @@ public class DialogueController : MonoBehaviour
         if (dialogueUI != null)
         {
             dialogueUI.SetActive(show);
-            IsDialogueActive = true;
-        }
-        else
-        {
-            Debug.LogError("[Dialogue] dialogueUI is NULL!");
+            IsDialogueActive = show;
         }
     }
+
 
     public void SetDialogueText(string text)
     {
@@ -200,6 +197,19 @@ public class DialogueController : MonoBehaviour
         SetupSinglePortrait(leftPortraitImage, leftPortraitCanvasGroup, leftPortraitRect, leftSprite, "Left");
         SetupSinglePortrait(rightPortraitImage, rightPortraitCanvasGroup, rightPortraitRect, rightSprite, "Right");
     }
+
+
+    public void HideDialogue()
+    {
+        Debug.Log("[Dialogue] HideDialogue");
+
+        if (dialogueUI != null)
+            dialogueUI.SetActive(false);
+
+        IsDialogueActive = false;
+        currentActiveSpeaker = SpeakerPosition.None;
+    }
+
 
     void SetupSinglePortrait(Image img, CanvasGroup cg, RectTransform rt, Sprite sprite, string side)
     {
@@ -307,9 +317,16 @@ public class DialogueController : MonoBehaviour
             return null;
         }
 
-        GameObject choiceButton = Instantiate(choiceButtonPrefab, choiceContainer);
+
+
+
+
+
+    GameObject choiceButton = Instantiate(choiceButtonPrefab, choiceContainer);
         choiceButton.GetComponentInChildren<TMP_Text>().text = choiceText;
         choiceButton.GetComponent<Button>().onClick.AddListener(onClickAction);
+
+
 
         return choiceButton;
     }

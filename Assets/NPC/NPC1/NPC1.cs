@@ -272,7 +272,7 @@ public class NPC : MonoBehaviour, IInteractable
         else
             dialogueUI.npcPortraitImage.gameObject.SetActive(false);
 
-        dialogueUI.ShowDialogue(false);
+        dialogueUI.HideDialogue();
     }
 
     private void FinishDialogue()
@@ -358,10 +358,12 @@ public class NPC : MonoBehaviour, IInteractable
         var cutscenes = GetCutscenesByDialogueIndex(dialogueIndex);
         if (cutscenes.Length > 0)
         {
-            dialogueUI.ShowDialogue(false);
+            // ซ่อน UI ชั่วคราว ❌ ห้ามใช้ HideDialogue
+            dialogueUI.dialogueUI.SetActive(false);
+
             PlayCutscenesSequentially(cutscenes, () =>
             {
-                dialogueUI.ShowDialogue(true);
+                dialogueUI.dialogueUI.SetActive(true);
                 DisplayCurrentLine();
                 CheckUnlockByDialogueIndex();
             });
@@ -372,6 +374,7 @@ public class NPC : MonoBehaviour, IInteractable
             CheckUnlockByDialogueIndex();
         }
     }
+
 
     private string GetSpeakerName(SpeakerPosition position)
     {
