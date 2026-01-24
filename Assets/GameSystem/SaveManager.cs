@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.SceneManagement;
+using System.Collections.Generic;
 
 public class SaveManager : MonoBehaviour
 {
@@ -8,16 +9,15 @@ public class SaveManager : MonoBehaviour
     string SaveKey(int slot) => $"SAVE_SLOT_{slot}";
     string SceneKey(int slot) => $"SAVE_SCENE_{slot}";
     string PosKey(int slot, string axis) => $"SAVE_POS_{slot}_{axis}";
-
- 
+    string DialogueKey(int slot) => $"SAVE_DIALOGUE_{slot}"; // 🆕
 
     public bool IsLoading { get; private set; }
+
     void Awake()
     {
         if (Instance == null)
         {
             Instance = this;
-            //DontDestroyOnLoad(gameObject);
         }
         else
         {
@@ -25,12 +25,10 @@ public class SaveManager : MonoBehaviour
         }
     }
 
-
     public void FinishLoading()
     {
         IsLoading = false;
     }
-
 
     // ===== CHECK =====
     public bool HasSave(int slot)
@@ -55,6 +53,10 @@ public class SaveManager : MonoBehaviour
         IsLoading = true;
 
         PlayerPrefs.SetInt("CurrentSlot", slot);
+        
+        // 🆕 โหลด dialogue data ก่อนเปลี่ยน scene
+        LoadDialogueData(slot);
+        
         string scene = PlayerPrefs.GetString(SceneKey(slot), "GameScene");
         StartCoroutine(LoadingScreen.Instance.LoadScene(scene));
     }
@@ -73,9 +75,58 @@ public class SaveManager : MonoBehaviour
         PlayerPrefs.SetFloat(PosKey(slot, "Y"), player.position.y);
         PlayerPrefs.SetFloat(PosKey(slot, "Z"), player.position.z);
 
+        // 🆕 บันทึก dialogue data
+        SaveDialogueData(slot);
+
         PlayerPrefs.Save();
     }
 
+    // 🆕 ฟังก์ชันบันทึก dialogue keys
+    private void SaveDialogueData(int slot)
+    {
+        if (DetectiveBookManager.Instance == null)
+        {
+            Debug.LogWarning("[SAVE] DetectiveBookManager not found!");
+            return;
+        }
+
+        var keys = DetectiveBookManager.Instance.reachedDialogueKeys;
+        
+        Debug.Log($"[SAVE] Dialogue keys count: {keys.Count}");
+        foreach (var key in keys)
+        {
+            Debug.Log($"[SAVE]   - {key}");
+        }
+        
+        string joined = string.Join("|", keys);
+        PlayerPrefs.SetString(DialogueKey(slot), joined);
+        
+        Debug.Log($"[SAVE] ✅ Saved to key '{DialogueKey(slot)}': {joined}");
+    }
+
+    // 🆕 ฟังก์ชันโหลด dialogue keys
+    private void LoadDialogueData(int slot)
+    {
+        string saved = PlayerPrefs.GetString(DialogueKey(slot), "");
+        
+        if (string.IsNullOrEmpty(saved))
+        {
+            Debug.Log("[LOAD] No dialogue data found");
+            DetectiveBookManager.pendingDialogueKeys = null;
+            return;
+        }
+
+        string[] keys = saved.Split('|');
+        
+        // เก็บไว้ใน static variable (DetectiveBookManager จะรับไปใน Awake)
+        DetectiveBookManager.pendingDialogueKeys = new HashSet<string>(keys);
+        
+        Debug.Log($"[LOAD] ✅ Restored {keys.Length} dialogue keys:");
+        foreach (var key in keys)
+        {
+            Debug.Log($"[LOAD]   - {key}");
+        }
+    }
 
     // ===== LOAD PLAYER =====
     public void ApplyPlayerPosition(Transform player)
@@ -88,31 +139,24 @@ public class SaveManager : MonoBehaviour
         float z = PlayerPrefs.GetFloat(PosKey(slot, "Z"), player.position.z);
         Vector3 savedPos = new Vector3(x, y, z);
 
-        // 🆕 ต้องปิด CharacterController ก่อน!
         CharacterController controller = player.GetComponent<CharacterController>();
         Rigidbody rb = player.GetComponent<Rigidbody>();
 
-        // ปิด CharacterController
         if (controller != null)
         {
             controller.enabled = false;
             Debug.Log("🔒 Disabled CharacterController for teleport");
         }
 
-        // Reset Rigidbody ถ้ามี
         if (rb != null)
         {
             rb.linearVelocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
         }
 
-        // ตั้งตำแหน่ง
         player.position = savedPos;
-
-        // Sync Physics
         Physics.SyncTransforms();
 
-        // เปิด CharacterController กลับ
         if (controller != null)
         {
             controller.enabled = true;
@@ -122,8 +166,6 @@ public class SaveManager : MonoBehaviour
         Debug.Log($"[LOAD APPLY] Pos = {player.position}");
     }
 
-
-
     // ===== DELETE =====
     public void DeleteSlot(int slot)
     {
@@ -132,6 +174,7 @@ public class SaveManager : MonoBehaviour
         PlayerPrefs.DeleteKey(PosKey(slot, "X"));
         PlayerPrefs.DeleteKey(PosKey(slot, "Y"));
         PlayerPrefs.DeleteKey(PosKey(slot, "Z"));
+        PlayerPrefs.DeleteKey(DialogueKey(slot)); // 🆕
         PlayerPrefs.Save();
     }
 }

@@ -21,7 +21,8 @@ public class LoadingScreen : MonoBehaviour
     [SerializeField] private bool debugMode = true;
     [SerializeField] private float holdBlackAfterLoad = 1f;
 
-    private bool isLoading = false;
+    // ✅ ถูกต้อง
+    public bool IsLoading { get; private set; } = false;
     private Coroutine currentFadeCoroutine = null;
 
     // -------------------- Unity --------------------
@@ -55,7 +56,7 @@ public class LoadingScreen : MonoBehaviour
 
     private void Update()
     {
-        if (isLoading && loadingSpinner != null)
+        if (IsLoading && loadingSpinner != null)
         {
             loadingSpinner.transform.Rotate(0f, 0f, -spinnerSpeed * Time.deltaTime);
         }
@@ -103,7 +104,7 @@ public class LoadingScreen : MonoBehaviour
     // -------------------- Scene Callback --------------------
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        if (!isLoading) return;
+        if (!IsLoading) return;
         if (scene.name == "_PersistentManagers") return;
 
         DebugLog($"🎬 Scene Loaded: {scene.name}");
@@ -130,7 +131,7 @@ public class LoadingScreen : MonoBehaviour
         if (loadingPanel != null)
             loadingPanel.SetActive(false);
 
-        isLoading = false;
+        IsLoading = false;
         DebugLog("✅ Load Complete - UI hidden");
     }
 
@@ -143,13 +144,13 @@ public class LoadingScreen : MonoBehaviour
     private IEnumerator LoadSceneAsync(string sceneName)
     {
         DebugLog($"🚨 LoadSceneAsync called : {sceneName}");
-        if (isLoading)
+        if (IsLoading)
         {
             DebugLog("⚠️ Already loading!");
             yield break;
         }
 
-        isLoading = true;
+        IsLoading = true;
 
         if (loadingPanel != null)
             loadingPanel.SetActive(true);
@@ -246,11 +247,6 @@ public class LoadingScreen : MonoBehaviour
     {
         if (debugMode)
             Debug.Log($"[LoadingScreen] {msg}");
-    }
-
-    public bool IsLoading()
-    {
-        return isLoading;
     }
 
     // -------------------- Manual Test --------------------

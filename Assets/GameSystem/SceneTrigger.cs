@@ -290,7 +290,7 @@ public class SceneTrigger : MonoBehaviour, IInteractable
             return false;
         }
 
-        if (LoadingScreen.Instance != null && LoadingScreen.Instance.IsLoading())
+        if (LoadingScreen.Instance != null && LoadingScreen.Instance.IsLoading)
         {
             DebugLog("⚠️ Cannot interact - loading in progress");
             return false;

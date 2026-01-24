@@ -12,8 +12,6 @@ public class DetectiveBookManager : MonoBehaviour
     [Header("All Detective Notes")]
     public DetectiveNote[] allNotes;
 
-
-
     [Header("Runtime Data")]
     private HashSet<string> unlockedNoteIDs = new HashSet<string>();
     public HashSet<string> reachedDialogueKeys = new HashSet<string>(); // "dialogueID_index"
@@ -33,11 +31,11 @@ public class DetectiveBookManager : MonoBehaviour
 
     CanvasGroup canvasGroup;
 
-
-
-
     [Header("TutorialUI")]
     public GameObject DetectiveBooktutorialUI;
+
+    // 🆕 Static variable สำหรับรับข้อมูลจาก SaveManager
+    public static HashSet<string> pendingDialogueKeys = null;
 
     void Awake()
     {
@@ -45,22 +43,40 @@ public class DetectiveBookManager : MonoBehaviour
         OnNoteUnlocked += ShowNoteNotification;
 
         if (Instance == null)
+        {
             Instance = this;
+            
+            // 🆕 โหลด dialogue keys จาก SaveManager
+            Debug.Log($"[DetectiveBook] pendingDialogueKeys = {(pendingDialogueKeys == null ? "NULL" : pendingDialogueKeys.Count.ToString())}");
+            
+            if (pendingDialogueKeys != null)
+            {
+                reachedDialogueKeys = new HashSet<string>(pendingDialogueKeys);
+                Debug.Log($"[DetectiveBook] ✅ Loaded {reachedDialogueKeys.Count} dialogue keys from SaveManager:");
+                foreach (var key in reachedDialogueKeys)
+                {
+                    Debug.Log($"[DetectiveBook]   - {key}");
+                }
+                pendingDialogueKeys = null; // Clear หลังใช้
+            }
+            else
+            {
+                reachedDialogueKeys = new HashSet<string>();
+                Debug.Log("[DetectiveBook] ⚠️ No pending keys from SaveManager, started fresh");
+            }
+        }
         else
         {
             Destroy(gameObject);
             return;
         }
-
-        // ❌ LoadUnlockedNotes(); เอาออก
     }
-
 
     // ==================== Unlock Logic ====================
     public void InitAfterSlotSelected()
     {
         unlockedNoteIDs.Clear();
-        reachedDialogueKeys.Clear();
+        // ✅ ไม่ล้าง reachedDialogueKeys เพราะโหลดมาจาก SaveManager แล้ว
         LoadUnlockedNotes();
     }
 
@@ -99,14 +115,11 @@ public class DetectiveBookManager : MonoBehaviour
         canvasGroup.alpha = to;
     }
 
-        public bool HasReachedDialogue(string dialogueID, int index)
+    public bool HasReachedDialogue(string dialogueID, int index)
     {
         string key = $"{dialogueID}_{index}";
         return reachedDialogueKeys.Contains(key);
     }
-
-    
-
 
     IEnumerator BlinkIcon()
     {
@@ -124,7 +137,6 @@ public class DetectiveBookManager : MonoBehaviour
         NoteIconImage.enabled = true;
         NotificationCanvas.gameObject.SetActive(false);
     }
-
 
     public void TryUnlockNotes()
     {
@@ -166,17 +178,15 @@ public class DetectiveBookManager : MonoBehaviour
     bool CheckAllConditions(DetectiveNote note)
     {
         if (note.unlockConditions == null || note.unlockConditions.Length == 0)
-            return true; // ไม่มีเงื่อนไข = ปลดล็อกตั้งแต่แรก
+            return true;
 
         foreach (var condition in note.unlockConditions)
         {
             if (!CheckCondition(condition))
-                return false; // เงื่อนไขใดไม่เป็นจริง = ล้มเหลว
+                return false;
         }
 
-        return true; // ทุกเงื่อนไขเป็นจริง
-
-        //NewNoteUnlockNotificationUI
+        return true;
     }
 
     bool CheckCondition(UnlockCondition condition)
@@ -233,7 +243,6 @@ public class DetectiveBookManager : MonoBehaviour
             Debug.Log($"📘 Total Unlocked Notes: {unlockedNoteIDs.Count}");
         }
 
-        // ลอง unlock notes อื่นที่รอ note นี้
         TryUnlockNotes();
     }
 
@@ -259,7 +268,7 @@ public class DetectiveBookManager : MonoBehaviour
 
             OnDialogueReached?.Invoke(dialogueID, index);
 
-            // ⬇️ ใส่ตรงนี้
+            // อัพเดท SceneTrigger ทั้งหมด
             SceneTrigger[] triggers = Object.FindObjectsByType<SceneTrigger>(FindObjectsSortMode.None);
             foreach (var t in triggers)
             {
@@ -269,7 +278,6 @@ public class DetectiveBookManager : MonoBehaviour
             TryUnlockNotes();
         }
     }
-
 
     // ==================== Get Unlocked Notes (Sorted) ====================
 
@@ -288,15 +296,16 @@ public class DetectiveBookManager : MonoBehaviour
         var data = new SaveData
         {
             unlockedNoteIDs = unlockedNoteIDs.ToList(),
-            reachedDialogueKeys = reachedDialogueKeys.ToList(),
             interactedHints = interactedHints.ToList()
+            // ✅ ไม่บันทึก dialogue keys ที่นี่ (SaveManager ดูแลให้)
         };
 
         string json = JsonUtility.ToJson(data);
         PlayerPrefs.SetString(BookSaveKey(), json);
         PlayerPrefs.Save();
+        
+        Debug.Log($"[DetectiveBook] Saved {unlockedNoteIDs.Count} notes (dialogue keys handled by SaveManager)");
     }
-
 
     void LoadUnlockedNotes()
     {
@@ -312,11 +321,12 @@ public class DetectiveBookManager : MonoBehaviour
         var data = JsonUtility.FromJson<SaveData>(json);
 
         unlockedNoteIDs = new HashSet<string>(data.unlockedNoteIDs);
-        reachedDialogueKeys = new HashSet<string>(data.reachedDialogueKeys);
         interactedHints = new HashSet<string>(data.interactedHints);
-        Debug.Log($"📘 Loaded {unlockedNoteIDs.Count} unlocked notes.");
+        // ✅ ไม่โหลด dialogue keys ที่นี่ (รับจาก SaveManager ใน Awake แล้ว)
+        
+        Debug.Log($"📘 Loaded {unlockedNoteIDs.Count} unlocked notes");
+        Debug.Log($"📖 Current dialogue keys: {reachedDialogueKeys.Count}");
     }
-
 
     public void ClearAllProgress()
     {
@@ -335,7 +345,6 @@ public class DetectiveBookManager : MonoBehaviour
         }
     }
 
-
     //==================== Tutorial ====================
     void ShowNoteTutorialOnce()
     {
@@ -353,7 +362,6 @@ public class DetectiveBookManager : MonoBehaviour
         Debug.Log("Detective Book Tutorial UI closed.");
     }
 
-
     // ==================== Save Data Structure ====================
 
     string BookSaveKey()
@@ -366,8 +374,7 @@ public class DetectiveBookManager : MonoBehaviour
     class SaveData
     {
         public List<string> unlockedNoteIDs;
-        public List<string> reachedDialogueKeys;
         public List<string> interactedHints;
-
+        // ✅ ลบ reachedDialogueKeys ออก (ย้ายไปให้ SaveManager ดูแล)
     }
 }
