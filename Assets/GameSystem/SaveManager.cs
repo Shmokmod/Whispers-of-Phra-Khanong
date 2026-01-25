@@ -1,6 +1,7 @@
-﻿using UnityEngine;
-using UnityEngine.SceneManagement;
+﻿using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class SaveManager : MonoBehaviour
 {
@@ -10,6 +11,10 @@ public class SaveManager : MonoBehaviour
     string SceneKey(int slot) => $"SAVE_SCENE_{slot}";
     string PosKey(int slot, string axis) => $"SAVE_POS_{slot}_{axis}";
     string DialogueKey(int slot) => $"SAVE_DIALOGUE_{slot}"; // 🆕
+
+    string ScreenshotPath(int slot) => Application.persistentDataPath + $"/save_{slot}.png";
+    string PlayTimeKey(int slot) => $"SAVE_PLAYTIME_{slot}";
+
 
     public bool IsLoading { get; private set; }
 
@@ -53,10 +58,10 @@ public class SaveManager : MonoBehaviour
         IsLoading = true;
 
         PlayerPrefs.SetInt("CurrentSlot", slot);
-        
+
         // 🆕 โหลด dialogue data ก่อนเปลี่ยน scene
         LoadDialogueData(slot);
-        
+
         string scene = PlayerPrefs.GetString(SceneKey(slot), "GameScene");
         StartCoroutine(LoadingScreen.Instance.LoadScene(scene));
     }
@@ -78,6 +83,16 @@ public class SaveManager : MonoBehaviour
         // 🆕 บันทึก dialogue data
         SaveDialogueData(slot);
 
+        // 🆕 บันทึกเวลาเล่น (หน่วยวินาที)
+        float oldTime = PlayerPrefs.GetFloat(PlayTimeKey(slot), 0f);
+        float currentSessionTime = Time.timeSinceLevelLoad;
+
+        PlayerPrefs.SetFloat(PlayTimeKey(slot), oldTime + currentSessionTime);
+
+        // 🆕 แคปหน้าจอ
+        StartCoroutine(CaptureScreenshot(slot));
+
+        // บันทึกข้อมูลทันที
         PlayerPrefs.Save();
     }
 
@@ -91,16 +106,16 @@ public class SaveManager : MonoBehaviour
         }
 
         var keys = DetectiveBookManager.Instance.reachedDialogueKeys;
-        
+
         Debug.Log($"[SAVE] Dialogue keys count: {keys.Count}");
         foreach (var key in keys)
         {
             Debug.Log($"[SAVE]   - {key}");
         }
-        
+
         string joined = string.Join("|", keys);
         PlayerPrefs.SetString(DialogueKey(slot), joined);
-        
+
         Debug.Log($"[SAVE] ✅ Saved to key '{DialogueKey(slot)}': {joined}");
     }
 
@@ -108,7 +123,7 @@ public class SaveManager : MonoBehaviour
     private void LoadDialogueData(int slot)
     {
         string saved = PlayerPrefs.GetString(DialogueKey(slot), "");
-        
+
         if (string.IsNullOrEmpty(saved))
         {
             Debug.Log("[LOAD] No dialogue data found");
@@ -117,10 +132,10 @@ public class SaveManager : MonoBehaviour
         }
 
         string[] keys = saved.Split('|');
-        
+
         // เก็บไว้ใน static variable (DetectiveBookManager จะรับไปใน Awake)
         DetectiveBookManager.pendingDialogueKeys = new HashSet<string>(keys);
-        
+
         Debug.Log($"[LOAD] ✅ Restored {keys.Length} dialogue keys:");
         foreach (var key in keys)
         {
@@ -177,4 +192,27 @@ public class SaveManager : MonoBehaviour
         PlayerPrefs.DeleteKey(DialogueKey(slot)); // 🆕
         PlayerPrefs.Save();
     }
+
+    private IEnumerator CaptureScreenshot(int slot)
+    {
+        // 🔴 ปิด UI ทั้งหมด
+        Canvas[] canvases = Object.FindObjectsByType<Canvas>(FindObjectsSortMode.None);
+        foreach (var c in canvases)
+            c.enabled = false;
+
+        yield return new WaitForEndOfFrame();
+
+        Texture2D tex = ScreenCapture.CaptureScreenshotAsTexture();
+        byte[] png = tex.EncodeToPNG();
+        System.IO.File.WriteAllBytes(ScreenshotPath(slot), png);
+        Destroy(tex);
+
+        // 🟢 เปิด UI กลับ
+        foreach (var c in canvases)
+            c.enabled = true;
+
+        Debug.Log("[SAVE] Screenshot without UI");
+    }
+
+
 }
