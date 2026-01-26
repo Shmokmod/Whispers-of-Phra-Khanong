@@ -2029,9 +2029,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 0286cf010540ca54ea0e96a7167c9924, type: 2}
   - {fileID: 11400000, guid: 70e07f68d5170bb439d33231541b4c07, type: 2}
   - {fileID: 11400000, guid: 36260f9ecb285e844a63b1790b6921c9, type: 2}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
   NotificationCanvas: {fileID: 628923837}
   NoteIconImage: {fileID: 1432930016}
   notifyDuration: 2
@@ -2475,6 +2472,14 @@ PrefabInstance:
     - target: {fileID: 3979288158179951287, guid: 7e509532f28eefd4faf02506ff929159, type: 3}
       propertyPath: m_Name
       value: Tutorial UI Canvas
+      objectReference: {fileID: 0}
+    - target: {fileID: 3979288158179951287, guid: 7e509532f28eefd4faf02506ff929159, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4859745300409013314, guid: 7e509532f28eefd4faf02506ff929159, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

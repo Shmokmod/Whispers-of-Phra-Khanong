@@ -33,6 +33,8 @@ public class DetectiveBookManager : MonoBehaviour
 
     [Header("TutorialUI")]
     public GameObject DetectiveBooktutorialUI;
+    bool tutorialShownThisSession = false;
+
 
     // 🆕 Static variable สำหรับรับข้อมูลจาก SaveManager
     public static HashSet<string> pendingDialogueKeys = null;
@@ -76,9 +78,12 @@ public class DetectiveBookManager : MonoBehaviour
     public void InitAfterSlotSelected()
     {
         unlockedNoteIDs.Clear();
-        // ✅ ไม่ล้าง reachedDialogueKeys เพราะโหลดมาจาก SaveManager แล้ว
+        reachedDialogueKeys.Clear();
+        interactedHints.Clear();
         LoadUnlockedNotes();
     }
+
+
 
     void ShowNoteNotification(DetectiveNote note)
     {
@@ -115,6 +120,18 @@ public class DetectiveBookManager : MonoBehaviour
         canvasGroup.alpha = to;
     }
 
+    public void OpenDetectiveBook()
+    {
+        if (!PlayerPrefs.HasKey("Tutorial_Note"))
+        {
+            DetectiveBooktutorialUI.SetActive(true);
+            PlayerPrefs.SetInt("Tutorial_Note", 1);
+        }
+
+        // เปิด UI Book ปกติ
+    }
+
+     
     public bool HasReachedDialogue(string dialogueID, int index)
     {
         string key = $"{dialogueID}_{index}";
@@ -348,11 +365,13 @@ public class DetectiveBookManager : MonoBehaviour
     //==================== Tutorial ====================
     void ShowNoteTutorialOnce()
     {
+        if (tutorialShownThisSession) return;
+
         if (!PlayerPrefs.HasKey("Tutorial_Note"))
         {
             DetectiveBooktutorialUI.SetActive(true);
             PlayerPrefs.SetInt("Tutorial_Note", 1);
-            Debug.Log("Showing Detective Book Tutorial UI for the first time.");
+            tutorialShownThisSession = true;
         }
     }
 

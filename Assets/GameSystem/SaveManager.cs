@@ -45,10 +45,19 @@ public class SaveManager : MonoBehaviour
     public void NewGame(int slot)
     {
         DeleteSlot(slot);
+
         PlayerPrefs.SetInt("CurrentSlot", slot);
+
+        // 🔥 ล้าง Detective Book ทั้งหมด
         PlayerPrefs.DeleteKey($"DetectiveBook_UnlockedNotes_{slot}");
+        PlayerPrefs.DeleteKey("Tutorial_Note");
+
+        // 🔥 ล้าง dialogue runtime
+        DetectiveBookManager.pendingDialogueKeys = null;
+
         StartCoroutine(LoadingScreen.Instance.LoadScene("Cutscene_Start"));
     }
+
 
     // ===== CONTINUE =====
     public void ContinueGame(int slot)
