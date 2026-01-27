@@ -23,6 +23,7 @@ public class CutsceneChangeScene : MonoBehaviour
         }
     }
 
+
     public void OnVideoFinished(VideoPlayer vp)
     {
         Debug.Log("Cutscene เล่นจบแล้ว กำลังโหลด Scene: level3");

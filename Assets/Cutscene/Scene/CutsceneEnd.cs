@@ -77,6 +77,14 @@ public class CutsceneEnd : MonoBehaviour
     void EndCutscene()
     {
         if (isEnding) return;
+
+        if (LoadingScreen.Instance != null)
+        {
+            StartCoroutine(LoadingScreen.Instance.LoadScene(nextScene));
+        }
+
+
+
         isEnding = true;
 
         Debug.Log("🚪 EndCutscene called");

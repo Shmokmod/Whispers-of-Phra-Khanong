@@ -369,7 +369,7 @@ VideoPlayer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1007808398}
   m_Enabled: 1
-  m_VideoClip: {fileID: 32900000, guid: 6f06f05762bec334c8d6a9c64ed5b822, type: 3}
+  m_VideoClip: {fileID: 32900000, guid: ae50120b56fcde742880f1afea08d616, type: 3}
   m_TargetCameraAlpha: 1
   m_TargetCamera3DLayout: 0
   m_TargetCamera: {fileID: 0}
@@ -409,7 +409,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ed0c4174e3311554ba569641e7b5ed92, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CutsceneEnd
-  nextScene: Level1
+  nextScene: TalkNPC-Cutscene
   minPlayTime: 2
   skipCooldown: 0.3
 --- !u!1 &1752984035

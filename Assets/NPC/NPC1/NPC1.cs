@@ -24,6 +24,11 @@ public class NPC : MonoBehaviour, IInteractable
     [SerializeField] private float fastTypingMultiplier = 0.1f;
 
 
+    public void ForceStartDialogue()
+    {
+        if (isDialogueActive) return;
+        StartDialogue();
+    }
 
     // Controllers
     private DialogueController dialogueUI;
@@ -127,7 +132,7 @@ public class NPC : MonoBehaviour, IInteractable
                 dialogueUI.SetDialogueText(dialogueData.dialogueLines[dialogueIndex]);
                 isTyping = false;
 
-                NextLine(); // auto ไปบรรทัดถัดไป
+                //NextLine(); // auto ไปบรรทัดถัดไป
             }
             else
             {

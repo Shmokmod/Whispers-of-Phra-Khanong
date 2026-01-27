@@ -104,7 +104,13 @@ public class LoadingScreen : MonoBehaviour
     // -------------------- Scene Callback --------------------
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        if (!IsLoading) return;
+        if (!IsLoading)
+        {
+            // กันกรณี skip / load พิเศษ
+            StartCoroutine(Fade(1f, 0f, fadeDuration));
+            return;
+        }
+
         if (scene.name == "_PersistentManagers") return;
 
         DebugLog($"🎬 Scene Loaded: {scene.name}");
@@ -139,6 +145,11 @@ public class LoadingScreen : MonoBehaviour
     public IEnumerator LoadScene(string sceneName)
     {
         yield return StartCoroutine(LoadSceneAsync(sceneName));
+    }
+
+    public void BeginLoading()
+    {
+        IsLoading = true;
     }
 
     private IEnumerator LoadSceneAsync(string sceneName)
