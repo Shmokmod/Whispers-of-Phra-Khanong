@@ -5,8 +5,14 @@ using UnityEngine.UI;
 
 public class LoadingScreen : MonoBehaviour
 {
+    // ==================================================
+    // Singleton
+    // ==================================================
     public static LoadingScreen Instance;
 
+    // ==================================================
+    // UI References
+    // ==================================================
     [Header("UI References")]
     [SerializeField] private GameObject loadingPanel;
     [SerializeField] private Image fadeImage;
@@ -14,22 +20,34 @@ public class LoadingScreen : MonoBehaviour
     [SerializeField] private GameObject loadingSpinner;
     [SerializeField] private Canvas fadeCanvas;
 
+    // ==================================================
+    // Settings
+    // ==================================================
     [Header("Settings")]
     [SerializeField] private float fadeDuration = 1f;
     [SerializeField] private float minFadeOutDuration = 0.5f;
     [SerializeField] private float spinnerSpeed = 200f;
     [SerializeField] private bool debugMode = true;
     [SerializeField] private float holdBlackAfterLoad = 1f;
+    [SerializeField] private float defaultFadeDuration = 1.5f;
+    [SerializeField]
+    private AnimationCurve fadeCurve =
+        AnimationCurve.EaseInOut(0, 0, 1, 1);
 
-    // ✅ ถูกต้อง
+    // ==================================================
+    // State
+    // ==================================================
     public bool IsLoading { get; private set; } = false;
-    private Coroutine currentFadeCoroutine = null;
+    private bool isFading = false;
 
-    // -------------------- Unity --------------------
+    // ==================================================
+    // Unity Lifecycle
+    // ==================================================
     private void Awake()
     {
-        if (Instance != null)
+        if (Instance != null && Instance != this)
         {
+            DebugLog("⚠️ Duplicate LoadingScreen detected - destroying");
             Destroy(gameObject);
             return;
         }
@@ -46,125 +64,113 @@ public class LoadingScreen : MonoBehaviour
 
     private void OnEnable()
     {
-        SceneManager.sceneLoaded += OnSceneLoaded;
+        SceneManager.sceneLoaded += OnSceneLoadedReset;
     }
 
     private void OnDisable()
     {
-        SceneManager.sceneLoaded -= OnSceneLoaded;
+        SceneManager.sceneLoaded -= OnSceneLoadedReset;
     }
 
     private void Update()
     {
         if (IsLoading && loadingSpinner != null)
         {
-            loadingSpinner.transform.Rotate(0f, 0f, -spinnerSpeed * Time.deltaTime);
+            loadingSpinner.transform.Rotate(
+                0f, 0f, -spinnerSpeed * Time.deltaTime
+            );
+        }
+
+        if (debugMode && Input.GetKeyDown(KeyCode.Space))
+        {
+            float alpha = fadeImage != null ? fadeImage.color.a : -1f;
+            int order = fadeCanvas != null ? fadeCanvas.sortingOrder : -999;
+            Debug.Log($"🎨 Alpha: {alpha}, IsLoading: {IsLoading}, Canvas Order: {order}");
         }
     }
 
-    // -------------------- Setup --------------------
-    private void SetupCanvas()
+    // ==================================================
+    // Scene Events
+    // ==================================================
+    private void OnSceneLoadedReset(Scene scene, LoadSceneMode mode)
     {
-        if (fadeCanvas == null && fadeImage != null)
-        {
-            fadeCanvas = fadeImage.GetComponentInParent<Canvas>();
-        }
+        DebugLog($"🎬 Scene Loaded: {scene.name}, IsLoading: {IsLoading}");
 
-        if (fadeCanvas != null)
-        {
-            fadeCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            fadeCanvas.sortingOrder = 9999;
-            DebugLog($"✅ Canvas setup complete - Sort Order: {fadeCanvas.sortingOrder}");
-        }
-    }
-
-    private void InitializeFadeImage()
-    {
-        if (fadeImage != null)
-        {
-            Color c = fadeImage.color;
-            c.a = 0f;
-            fadeImage.color = c;
-
-            RectTransform rt = fadeImage.GetComponent<RectTransform>();
-            if (rt != null)
-            {
-                rt.anchorMin = Vector2.zero;
-                rt.anchorMax = Vector2.one;
-                rt.offsetMin = Vector2.zero;
-                rt.offsetMax = Vector2.zero;
-                DebugLog("✅ FadeImage stretched to full screen");
-            }
-        }
-
-        if (loadingPanel != null)
-            loadingPanel.SetActive(false);
-    }
-
-    // -------------------- Scene Callback --------------------
-    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
-    {
         if (!IsLoading)
         {
-            // กันกรณี skip / load พิเศษ
-            StartCoroutine(Fade(1f, 0f, fadeDuration));
-            return;
+            ForceReset();
         }
-
-        if (scene.name == "_PersistentManagers") return;
-
-        DebugLog($"🎬 Scene Loaded: {scene.name}");
-
-        // ✅ ให้ SpawnManager จัดการ Player ทั้งหมด
-        // LoadingScreen แค่ทำ Fade In/Out
-
-        StartCoroutine(CompleteLoadingSequence());
     }
 
-    private IEnumerator CompleteLoadingSequence()
-    {
-        yield return new WaitForEndOfFrame();
-
-        // รอให้ SpawnManager ทำงานเสร็จ
-        yield return new WaitForSeconds(0.2f);
-
-        DebugLog($"⏸ Hold black screen {holdBlackAfterLoad}s");
-        yield return new WaitForSeconds(holdBlackAfterLoad);
-
-        DebugLog("☀️ Fade IN start");
-        yield return StartCoroutine(Fade(1f, 0f, fadeDuration));
-
-        if (loadingPanel != null)
-            loadingPanel.SetActive(false);
-
-        IsLoading = false;
-        DebugLog("✅ Load Complete - UI hidden");
-    }
-
-    // -------------------- Public API --------------------
+    // ==================================================
+    // Public API
+    // ==================================================
     public IEnumerator LoadScene(string sceneName)
     {
-        yield return StartCoroutine(LoadSceneAsync(sceneName));
+        DebugLog($"🚀 Start loading: {sceneName}");
+        BeginLoading();
+
+        // Fade OUT
+        yield return Fade(0f, 1f, defaultFadeDuration);
+        DebugLog("🌑 Screen is BLACK");
+
+        // Load Scene
+        AsyncOperation op = SceneManager.LoadSceneAsync(sceneName);
+        if (op == null)
+        {
+            Debug.LogError($"❌ Cannot load scene: {sceneName}");
+            ForceReset();
+            yield break;
+        }
+
+        while (!op.isDone)
+        {
+            yield return null;
+        }
+
+        DebugLog($"📦 Scene '{sceneName}' loaded");
+        yield return StartCoroutine(CompleteLoadingSequence());
     }
 
     public void BeginLoading()
     {
         IsLoading = true;
-    }
 
-    private IEnumerator LoadSceneAsync(string sceneName)
-    {
-        DebugLog($"🚨 LoadSceneAsync called : {sceneName}");
-        if (IsLoading)
+        if (fadeCanvas != null)
         {
-            DebugLog("⚠️ Already loading!");
-            yield break;
+            fadeCanvas.sortingOrder = 9999;
+            DebugLog($"Canvas Order raised to: {fadeCanvas.sortingOrder}");
         }
-
-        IsLoading = true;
 
         if (loadingPanel != null)
             loadingPanel.SetActive(true);
+
+        Time.timeScale = 1f;
+        DebugLog("BeginLoading called");
+    }
+
+    // ==================================================
+    // Loading Flow
+    // ==================================================
+    private IEnumerator CompleteLoadingSequence()
+    {
+        DebugLog("🎬 CompleteLoadingSequence START");
+
+        yield return new WaitForEndOfFrame();
+        yield return new WaitForSeconds(0.1f);
+        yield return new WaitForSecondsRealtime(holdBlackAfterLoad);
+
+        DebugLog("☀️ Fade IN start");
+        yield return Fade(1f, 0f, defaultFadeDuration);
+
+        if (fadeCanvas != null)
+        {
+            fadeCanvas.sortingOrder = -1;
+            DebugLog("Canvas Order reset to -1");
+        }
+
+        if (loadingPanel != null)
+            loadingPanel.SetActive(false);
 
         if (fadeImage != null)
         {
@@ -173,53 +179,44 @@ public class LoadingScreen : MonoBehaviour
             fadeImage.color = c;
         }
 
-        DebugLog("🌑 Fade OUT start");
-        float fadeStartTime = Time.time;
-        yield return StartCoroutine(Fade(0f, 1f, fadeDuration));
+        IsLoading = false;
+        isFading = false;
 
-        float fadeElapsed = Time.time - fadeStartTime;
-        if (fadeElapsed < minFadeOutDuration)
-        {
-            yield return new WaitForSeconds(minFadeOutDuration - fadeElapsed);
-        }
-
-        DebugLog($"🔄 Loading scene: {sceneName}");
-        AsyncOperation op = SceneManager.LoadSceneAsync(sceneName);
-        op.allowSceneActivation = true;
-
-        while (!op.isDone)
-        {
-            DebugLog($"Loading progress: {op.progress * 100}%");
-            yield return null;
-        }
-
-        DebugLog("✅ Scene load complete, waiting for callback...");
+        DebugLog("✅ Load Complete");
     }
 
-    // -------------------- Fade --------------------
+    // ==================================================
+    // Fade
+    // ==================================================
     private IEnumerator Fade(float from, float to, float duration)
     {
         if (fadeImage == null)
         {
-            DebugLog("❌ FadeImage is null!");
+            Debug.LogError("⚠️ fadeImage is NULL!");
             yield break;
         }
 
-        if (currentFadeCoroutine != null)
+        if (isFading)
         {
-            StopCoroutine(currentFadeCoroutine);
+            Debug.LogWarning($"⚠️ Already fading! Ignoring {from}→{to}");
+            yield break;
         }
 
-        DebugLog($"🎨 Fading from {from} to {to} over {duration}s");
+        isFading = true;
+
+        Debug.Log($"🎨 Fade {from} → {to} ({duration}s)");
 
         float elapsed = 0f;
         Color c = fadeImage.color;
+        c.a = from;
+        fadeImage.color = c;
 
         while (elapsed < duration)
         {
-            elapsed += Time.deltaTime;
+            elapsed += Time.unscaledDeltaTime;
             float t = Mathf.Clamp01(elapsed / duration);
-            c.a = Mathf.Lerp(from, to, t);
+            float curve = fadeCurve.Evaluate(t);
+            c.a = Mathf.Lerp(from, to, curve);
             fadeImage.color = c;
             yield return null;
         }
@@ -227,102 +224,103 @@ public class LoadingScreen : MonoBehaviour
         c.a = to;
         fadeImage.color = c;
 
-        DebugLog($"✅ Fade complete - Final alpha: {c.a}");
-        currentFadeCoroutine = null;
+        isFading = false;
+        Debug.Log($"✅ Fade COMPLETE: {to}");
     }
 
-    // -------------------- Utils --------------------
-    private void ValidateReferences()
+    // ==================================================
+    // Safety / Recovery
+    // ==================================================
+    private IEnumerator CheckAndForceReset(string sceneName)
     {
-        if (!fadeImage)
-            Debug.LogError("❌ FadeImage not assigned!");
+        DebugLog($"⏳ Waiting for loading... ({sceneName})");
 
-        if (!loadingPanel)
-            Debug.LogError("❌ LoadingPanel not assigned!");
+        float timeout = 2f;
+        float elapsed = 0f;
+
+        while (IsLoading && elapsed < timeout)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            yield return null;
+        }
+
+        if (IsLoading)
+        {
+            Debug.LogWarning($"⚠️ IsLoading stuck! Force resetting... ({sceneName})");
+            ForceReset();
+        }
+        else
+        {
+            DebugLog("✅ Loading completed normally");
+        }
+    }
+
+    private void ForceReset()
+    {
+        if (fadeCanvas != null)
+            fadeCanvas.sortingOrder = -1;
 
         if (fadeImage != null)
         {
-            Canvas canvas = fadeImage.GetComponentInParent<Canvas>();
-            if (canvas == null)
-            {
-                Debug.LogError("❌ FadeImage must be under a Canvas!");
-            }
-            else if (canvas.renderMode != RenderMode.ScreenSpaceOverlay)
-            {
-                Debug.LogWarning("⚠️ Canvas should be Screen Space - Overlay for best results");
-            }
+            Color c = fadeImage.color;
+            c.a = 0f;
+            fadeImage.color = c;
         }
+
+        if (loadingPanel != null)
+            loadingPanel.SetActive(false);
+
+        IsLoading = false;
+        isFading = false;
+
+        DebugLog("🔄 ForceReset complete");
+    }
+
+    // ==================================================
+    // Setup & Utils
+    // ==================================================
+    private void SetupCanvas()
+    {
+        if (fadeCanvas == null && fadeImage != null)
+            fadeCanvas = fadeImage.GetComponentInParent<Canvas>();
+
+        if (fadeCanvas != null)
+        {
+            fadeCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            fadeCanvas.sortingOrder = -1;
+        }
+    }
+
+    private void InitializeFadeImage()
+    {
+        if (fadeImage == null) return;
+
+        Color c = fadeImage.color;
+        c.a = 0f;
+        fadeImage.color = c;
+
+        RectTransform rt = fadeImage.GetComponent<RectTransform>();
+        if (rt != null)
+        {
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
+        }
+
+        if (loadingPanel != null)
+            loadingPanel.SetActive(false);
+    }
+
+    private void ValidateReferences()
+    {
+        if (!fadeImage) Debug.LogError("❌ FadeImage not assigned!");
+        if (!loadingPanel) Debug.LogError("❌ LoadingPanel not assigned!");
     }
 
     private void DebugLog(string msg)
     {
         if (debugMode)
             Debug.Log($"[LoadingScreen] {msg}");
-    }
-
-    // -------------------- Manual Test --------------------
-    [ContextMenu("Test Fade Out")]
-    private void TestFadeOut()
-    {
-        Debug.Log("=== TEST FADE OUT ===");
-        DebugImageStatus();
-        StartCoroutine(Fade(0f, 1f, fadeDuration));
-    }
-
-    [ContextMenu("Test Fade In")]
-    private void TestFadeIn()
-    {
-        Debug.Log("=== TEST FADE IN ===");
-        DebugImageStatus();
-        StartCoroutine(Fade(1f, 0f, fadeDuration));
-    }
-
-    [ContextMenu("Debug Image Status")]
-    private void DebugImageStatus()
-    {
-        if (fadeImage == null)
-        {
-            Debug.LogError("❌ fadeImage is NULL!");
-            return;
-        }
-
-        Debug.Log($"FadeImage GameObject: {fadeImage.gameObject.name}");
-        Debug.Log($"FadeImage Active: {fadeImage.gameObject.activeInHierarchy}");
-        Debug.Log($"FadeImage Enabled: {fadeImage.enabled}");
-        Debug.Log($"Current Color: {fadeImage.color}");
-        Debug.Log($"Current Alpha: {fadeImage.color.a}");
-
-        Canvas canvas = fadeImage.GetComponentInParent<Canvas>();
-        if (canvas != null)
-        {
-            Debug.Log($"Canvas: {canvas.gameObject.name}");
-            Debug.Log($"Canvas RenderMode: {canvas.renderMode}");
-            Debug.Log($"Canvas SortOrder: {canvas.sortingOrder}");
-            Debug.Log($"Canvas Active: {canvas.gameObject.activeInHierarchy}");
-        }
-        else
-        {
-            Debug.LogError("❌ No Canvas found!");
-        }
-
-        RectTransform rt = fadeImage.GetComponent<RectTransform>();
-        if (rt != null)
-        {
-            Debug.Log($"RectTransform Size: {rt.rect.size}");
-            Debug.Log($"Anchors: Min={rt.anchorMin}, Max={rt.anchorMax}");
-        }
-    }
-
-    [ContextMenu("Force Show Black Screen")]
-    private void ForceShowBlack()
-    {
-        if (fadeImage != null)
-        {
-            fadeImage.gameObject.SetActive(true);
-            Color c = fadeImage.color;
-            c.a = 1f;
-            fadeImage.color = c;
-            Debug.Log("✅ Forced black screen ON");
-        }
     }
 }

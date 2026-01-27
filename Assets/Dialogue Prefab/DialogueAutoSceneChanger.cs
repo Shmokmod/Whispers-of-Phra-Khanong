@@ -48,7 +48,6 @@ public class DialogueAutoSceneChanger_NoSpawn : MonoBehaviour
         }
     }
 
-
     private void OnDialogueReached(string dialogueID, int index)
     {
         if (triggered) return;
@@ -56,30 +55,46 @@ public class DialogueAutoSceneChanger_NoSpawn : MonoBehaviour
         if (dialogueID == requiredDialogueID && index == requiredDialogueIndex)
         {
             triggered = true;
-            DebugLog("✅ Dialogue reached → delay → fade → cutscene");
+            DebugLog($"✅ Dialogue reached → delay {delayBeforeLoad}s → fade → scene");
             StartCoroutine(DelayedLoad());
         }
     }
 
     private IEnumerator DelayedLoad()
     {
+        DebugLog($"🔄 DelayedLoad START (delay: {delayBeforeLoad}s)");
         yield return new WaitForSecondsRealtime(delayBeforeLoad);
 
-        Time.timeScale = 1f; // 🔥 สำคัญมาก
+        Time.timeScale = 1f;
 
-        if (LoadingScreen.Instance != null && !LoadingScreen.Instance.IsLoading)
+        // ✅ เพิ่ม Debug ละเอียด
+        Debug.Log($"━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        Debug.Log($"📋 DialogueAutoSceneChanger attempting to load: {sceneToLoad}");
+        Debug.Log($"   LoadingScreen.Instance: {LoadingScreen.Instance != null}");
+        Debug.Log($"   IsLoading: {(LoadingScreen.Instance != null ? LoadingScreen.Instance.IsLoading.ToString() : "N/A")}");
+        Debug.Log($"━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
+        if (LoadingScreen.Instance != null)
         {
-            yield return StartCoroutine(
-                LoadingScreen.Instance.LoadScene(sceneToLoad)
-            );
+            if (!LoadingScreen.Instance.IsLoading)
+            {
+                DebugLog($"✅ Using LoadingScreen.LoadScene()");
+                yield return StartCoroutine(
+                    LoadingScreen.Instance.LoadScene(sceneToLoad)
+                );
+            }
+            else
+            {
+                Debug.LogError($"❌ LoadingScreen is already loading! Using fallback");
+                SceneManager.LoadScene(sceneToLoad);
+            }
         }
         else
         {
+            Debug.LogError($"❌ LoadingScreen.Instance is NULL! Using fallback");
             SceneManager.LoadScene(sceneToLoad);
         }
     }
-
-
 
     private void DebugLog(string msg)
     {

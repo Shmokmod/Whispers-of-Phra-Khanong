@@ -1,19 +1,20 @@
 using UnityEngine;
 using UnityEngine.Video;
-using UnityEngine.SceneManagement;
+using System.Collections;  
 
 public class CutsceneChangeScene : MonoBehaviour
 {
     public VideoPlayer videoPlayer;
+    public string nextScene = "level3"; // ✅ เพิ่มตัวแปรนี้
+
+    private bool isEnding = false; // ✅ ป้องกันเรียกซ้ำ
 
     void Start()
     {
         if (videoPlayer != null)
         {
-            // สมัครรับฟังเหตุการณ์เมื่อวิดีโอเล่นจบ
             Debug.Log("สมัครรับฟังเหตุการณ์ videoPlayer.loopPointReached");
             videoPlayer.loopPointReached += OnVideoFinished;
-            // เริ่มเล่นวิดีโอ (ถ้ายังไม่ได้เล่น)
             Debug.Log("เริ่มเล่น Cutscene");
             videoPlayer.Play();
         }
@@ -23,20 +24,33 @@ public class CutsceneChangeScene : MonoBehaviour
         }
     }
 
-
     public void OnVideoFinished(VideoPlayer vp)
     {
-        Debug.Log("Cutscene เล่นจบแล้ว กำลังโหลด Scene: level3");
-        SceneManager.LoadScene("level3");
+        if (isEnding) // ✅ ป้องกันเรียกซ้ำ
+        {
+            Debug.LogWarning("⚠️ Already ending, ignoring");
+            return;
+        }
+
+        isEnding = true;
+        Debug.Log($"Cutscene เล่นจบแล้ว กำลังโหลด Scene: {nextScene}");
+
+        // ✅ ใช้ LoadingScreen แทน SceneManager
+        if (LoadingScreen.Instance != null && !LoadingScreen.Instance.IsLoading)
+        {
+            StartCoroutine(LoadingScreen.Instance.LoadScene(nextScene));
+        }
+        else
+        {
+            UnityEngine.SceneManagement.SceneManager.LoadScene(nextScene);
+        }
     }
 
     void OnDestroy()
     {
-        // Unsubscribe เมื่อ Object ถูกทำลาย
         if (videoPlayer != null)
         {
             videoPlayer.loopPointReached -= OnVideoFinished;
-            
         }
     }
 }
