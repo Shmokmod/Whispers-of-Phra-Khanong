@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ebd952404cf75894aabc7dc8d0db8ae5, type: 3}
+  m_Name: 9Jek
+  m_EditorClassIdentifier: Assembly-CSharp::DetectiveNote
+  noteID: Jek
+  title: "\u0E2D\u0E34\u0E19"
+  content: "\u0E2D\u0E34\u0E19"
+  orderIndex: 28
+  noteImage: {fileID: 0}
+  unlockConditions:
+  - type: 0
+    targetID: Jek
+    dialogueIndex: 28

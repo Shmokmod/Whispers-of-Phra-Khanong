@@ -25,6 +25,7 @@ public class CutsceneController : MonoBehaviour
     private bool isPlayingCutscene = false;
     private bool canSkip = false;
     private System.Action onCutsceneComplete;
+    private GraphicRaycaster cutsceneRaycaster; // เพิ่มตัวนี้
 
     void Awake()
     {
@@ -32,6 +33,12 @@ public class CutsceneController : MonoBehaviour
             instance = this;
         else
             Destroy(gameObject);
+
+        // เก็บ reference ของ GraphicRaycaster
+        if (cutsceneCanvas != null)
+        {
+            cutsceneRaycaster = cutsceneCanvas.GetComponent<GraphicRaycaster>();
+        }
     }
 
     void Start()
@@ -100,8 +107,11 @@ public class CutsceneController : MonoBehaviour
         isPlayingCutscene = true;
         onCutsceneComplete = onComplete;
 
-        // เปิด Canvas
+        // เปิด Canvas และ DISABLE Raycaster เพื่อไม่ให้บัง UI อื่น
         cutsceneCanvas.SetActive(true);
+        if (cutsceneRaycaster != null)
+            cutsceneRaycaster.enabled = false;
+
         cutsceneImage.sprite = cutscene.cutsceneImage;
         cutsceneImage.gameObject.SetActive(true);
 
@@ -146,8 +156,11 @@ public class CutsceneController : MonoBehaviour
         isPlayingCutscene = true;
         onCutsceneComplete = onComplete;
 
-        // เปิด Canvas และ Video Display
+        // เปิด Canvas และ DISABLE Raycaster
         cutsceneCanvas.SetActive(true);
+        if (cutsceneRaycaster != null)
+            cutsceneRaycaster.enabled = false;
+
         videoDisplay.gameObject.SetActive(true);
         cutsceneImage.gameObject.SetActive(false);
 
@@ -241,14 +254,18 @@ public class CutsceneController : MonoBehaviour
         }
 
         // ปิดทุกอย่าง
-        cutsceneCanvas.SetActive(false);
-        videoDisplay.gameObject.SetActive(false);
-        cutsceneImage.gameObject.SetActive(false);
-
         if (videoPlayer.isPlaying)
             videoPlayer.Stop();
 
+        videoDisplay.gameObject.SetActive(false);
+        cutsceneImage.gameObject.SetActive(false);
+
+        // IMPORTANT: ปิด Canvas และรอ 1 frame ก่อน callback
+        cutsceneCanvas.SetActive(false);
         isPlayingCutscene = false;
+
+        // รอ 1 frame เพื่อให้แน่ใจว่า Canvas ปิดสมบูรณ์
+        yield return null;
 
         // เรียก Callback
         onCutsceneComplete?.Invoke();

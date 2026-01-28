@@ -117,13 +117,22 @@ public class NPC : MonoBehaviour, IInteractable
         if (beforeCutscenes.Length > 0)
         {
             // เล่น cutscene ก่อน แล้วค่อยเริ่ม dialogue
-            PlayCutscenesSequentially(beforeCutscenes, InitializeDialogue);
+            PlayCutscenesSequentially(beforeCutscenes, () => {
+                // รอ 1 frame เพื่อให้ Cutscene Canvas ปิดสมบูรณ์
+                StartCoroutine(WaitOneFrameThen(InitializeDialogue));
+            });
         }
         else
         {
             // ไม่มี cutscene ก่อน dialogue ก็เริ่มเลย
             InitializeDialogue();
         }
+    }
+
+    private IEnumerator WaitOneFrameThen(System.Action action)
+    {
+        yield return null; // รอ 1 frame
+        action?.Invoke();
     }
 
     private void InitializeDialogue()
