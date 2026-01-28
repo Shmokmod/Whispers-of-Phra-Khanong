@@ -6269,6 +6269,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1570794447}
     m_Modifications:
+    - target: {fileID: 2673699202678557193, guid: c39de33acc5e44b41a101e81db923dca, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5123237189241981267, guid: c39de33acc5e44b41a101e81db923dca, type: 3}
       propertyPath: m_Pivot.x
       value: 0
@@ -6349,6 +6353,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5399511658333586217, guid: c39de33acc5e44b41a101e81db923dca, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5710835497038682152, guid: c39de33acc5e44b41a101e81db923dca, type: 3}
       propertyPath: m_Padding.m_Left
       value: -950
@@ -6356,6 +6364,10 @@ PrefabInstance:
     - target: {fileID: 7825833962043277330, guid: c39de33acc5e44b41a101e81db923dca, type: 3}
       propertyPath: m_Name
       value: DialogueUI
+      objectReference: {fileID: 0}
+    - target: {fileID: 7927366587391869771, guid: c39de33acc5e44b41a101e81db923dca, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8368306630546267159, guid: c39de33acc5e44b41a101e81db923dca, type: 3}
       propertyPath: m_AnchoredPosition.x

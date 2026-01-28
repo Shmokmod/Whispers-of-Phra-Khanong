@@ -5,13 +5,13 @@ using System.Collections;
 public class CutsceneEnd : MonoBehaviour
 {
     public string nextScene = "Level1";
-    
+
     [Header("Skip Settings")]
     [Tooltip("ป้องกัน skip ใน X วินาทีแรก")]
     public float minPlayTime = 2f;
     [Tooltip("ป้องกัน spam กดติดๆ")]
     public float skipCooldown = 0.3f;
-    
+
     private bool isEnding = false;
     private bool canSkip = false;
     private VideoPlayer vp;
@@ -36,14 +36,14 @@ public class CutsceneEnd : MonoBehaviour
         StartCoroutine(EnableSkipAfterDelay());
     }
 
-    // 🆕 รอให้ LoadingScreen fade in เสร็จ + เวลาขั้นต่ำ
+    // รอให้ LoadingScreen fade in เสร็จ + เวลาขั้นต่ำ
     IEnumerator EnableSkipAfterDelay()
     {
         // รอให้ LoadingScreen โหลดเสร็จ (fadeIn 1s + hold 1s + buffer)
         float waitTime = Mathf.Max(minPlayTime, 2.5f);
-        
+
         yield return new WaitForSecondsRealtime(waitTime);
-        
+
         canSkip = true;
         Debug.Log($"✅ Skip enabled after {waitTime}s");
     }
@@ -53,17 +53,17 @@ public class CutsceneEnd : MonoBehaviour
         if (isEnding) return;
         if (!canSkip) return;
 
-        // 🆕 ป้องกัน spam กด
+        // ป้องกัน spam กด
         if (Time.unscaledTime - lastSkipAttempt < skipCooldown)
             return;
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
             lastSkipAttempt = Time.unscaledTime;
-            
+
             float elapsed = Time.unscaledTime - sceneStartTime;
             Debug.Log($"⏩ Skip | elapsed={elapsed:F2}s | videoTime={vp?.time:F2}");
-            
+
             EndCutscene();
         }
     }
@@ -76,22 +76,19 @@ public class CutsceneEnd : MonoBehaviour
 
     void EndCutscene()
     {
-        if (isEnding) return;
-
-        if (LoadingScreen.Instance != null)
+        // 🔴 CRITICAL: Prevent multiple calls
+        if (isEnding)
         {
-            StartCoroutine(LoadingScreen.Instance.LoadScene(nextScene));
+            Debug.Log("⚠️ EndCutscene already called, ignoring");
+            return;
         }
 
-
-
         isEnding = true;
-
         Debug.Log("🚪 EndCutscene called");
 
         // ทำความสะอาด
         StopAllCoroutines();
-        
+
         if (vp != null)
         {
             vp.loopPointReached -= OnVideoEnd;
@@ -101,18 +98,22 @@ public class CutsceneEnd : MonoBehaviour
         Time.timeScale = 1f;
         PauseController.isPaused = false;
 
-        // 🔴 เช็คว่า LoadingScreen พร้อมหรือยัง
+        // 🆕 OPTION 3: Force reset ถ้า LoadingScreen stuck
         if (LoadingScreen.Instance != null)
         {
-            if (!LoadingScreen.Instance.IsLoading)
-            {
-                StartCoroutine(LoadingScreen.Instance.LoadScene(nextScene));
-            }
-            else
-            {
-                Debug.LogWarning("⏳ LoadingScreen is still loading, waiting...");
-                StartCoroutine(WaitAndLoad());
-            }
+            LoadingScreen.Instance.ForceResetIfStuck();
+        }
+
+        // เริ่มโหลดฉากใหม่
+        StartLoadingNewScene();
+    }
+
+    void StartLoadingNewScene()
+    {
+        if (LoadingScreen.Instance != null)
+        {
+            Debug.Log($"✅ Starting load for: {nextScene}");
+            StartCoroutine(LoadingScreen.Instance.LoadScene(nextScene));
         }
         else
         {
@@ -120,30 +121,6 @@ public class CutsceneEnd : MonoBehaviour
             // Fallback
             UnityEngine.SceneManagement.SceneManager.LoadScene(nextScene);
         }
-    }
-
-    // 🆕 รอให้ LoadingScreen พร้อม (กรณี edge case)
-    IEnumerator WaitAndLoad()
-    {
-        float timeout = 3f;
-        float elapsed = 0f;
-
-        while (elapsed < timeout)
-        {
-            if (LoadingScreen.Instance != null && !LoadingScreen.Instance.IsLoading)
-            {
-                Debug.Log("✅ LoadingScreen ready, loading scene now");
-                yield return StartCoroutine(LoadingScreen.Instance.LoadScene(nextScene));
-                yield break;
-            }
-
-            elapsed += Time.unscaledDeltaTime;
-            yield return null;
-        }
-
-        // Timeout
-        Debug.LogError("❌ LoadingScreen timeout! Using fallback");
-        UnityEngine.SceneManagement.SceneManager.LoadScene(nextScene);
     }
 
     private void OnDestroy()

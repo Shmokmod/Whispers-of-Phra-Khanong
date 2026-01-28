@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.Video;
 
-// ✅ ย้าย enum มาไว้ด้านนอก class
 public enum SpeakerPosition
 {
     None = 0,
@@ -12,15 +11,15 @@ public enum SpeakerPosition
 public enum CutsceneType
 {
     None,
-    Image,    // แสดงรูปภาพ
-    Video     // เล่นวิดีโอ
+    Image,
+    Video
 }
 
 public enum CutsceneTiming
 {
-    BeforeDialogue,  // ก่อนเริ่ม dialogue
-    AtDialogueIndex, // ตอนบรรทัดที่กำหนด
-    AfterDialogue    // หลังจบ dialogue
+    BeforeDialogue,
+    AtDialogueIndex,
+    AfterDialogue
 }
 
 [CreateAssetMenu(fileName = "New NPC Dialogue", menuName = "Dialogue/NPC Dialogue")]
@@ -40,7 +39,7 @@ public class NPCdialogue : ScriptableObject
     [Header("Dialogue Lines")]
     public string[] dialogueLines;
 
-    [Header("Speaker Per Line (ใช้ตัวเลข: 0=None, 1=Left, 2=Right)")]
+    [Header("Speaker Per Line")]
     public SpeakerPosition[] speakerPerLine;
 
     [Header("Typing Settings")]
@@ -53,13 +52,16 @@ public class NPCdialogue : ScriptableObject
     [Header("End Dialogue")]
     public bool[] endDialogueLine;
 
+    [Header("❌ Unskippable Dialogue")]
+    public bool[] unskippableLine;
+
     [Header("Choices")]
     public DialogueChoice[] choices;
 
     [Header("Statement Unlocks")]
     public StatementUnlockCondition[] statementUnlocks;
 
-    [Header("🎬 Cutscenes & Videos")]
+    [Header("🎬 Cutscenes")]
     public CutsceneEvent[] cutsceneEvents;
 }
 
@@ -82,29 +84,17 @@ public class StatementUnlockCondition
 [System.Serializable]
 public class CutsceneEvent
 {
-    [Header("Cutscene Type")]
-    public CutsceneType cutsceneType = CutsceneType.Image;
+    public CutsceneType cutsceneType;
+    public CutsceneTiming timing;
+    public int dialogueIndex;
 
-    [Header("Timing")]
-    public CutsceneTiming timing = CutsceneTiming.BeforeDialogue;
-
-    [Tooltip("ถ้าเลือก AtDialogueIndex ให้ระบุ index ของบรรทัด dialogue")]
-    public int dialogueIndex = 0;
-
-    [Header("Image Cutscene (ถ้าเลือก Image)")]
     public Sprite cutsceneImage;
-    public float imageDuration = 3f; // วินาที (0 = กดเพื่อข้าม)
+    public float imageDuration;
 
-    [Header("Video Cutscene (ถ้าเลือก Video)")]
     public VideoClip videoClip;
-    public bool canSkipVideo = true;
+    public bool canSkipVideo;
 
-    [Header("Fade Settings")]
-    public bool useFadeIn = true;
-    public bool useFadeOut = true;
-    public float fadeDuration = 0.5f;
-
-
-
-
+    public bool useFadeIn;
+    public bool useFadeOut;
+    public float fadeDuration;
 }

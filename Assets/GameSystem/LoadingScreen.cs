@@ -30,6 +30,7 @@ public class LoadingScreen : MonoBehaviour
     [SerializeField] private bool debugMode = true;
     [SerializeField] private float holdBlackAfterLoad = 1f;
     [SerializeField] private float defaultFadeDuration = 1.5f;
+    [SerializeField] private float loadingTimeout = 2f;
     [SerializeField]
     private AnimationCurve fadeCurve =
         AnimationCurve.EaseInOut(0, 0, 1, 1);
@@ -39,6 +40,8 @@ public class LoadingScreen : MonoBehaviour
     // ==================================================
     public bool IsLoading { get; private set; } = false;
     private bool isFading = false;
+    private bool isCompleting = false; // 🆕 กำลังทำ CompleteLoadingSequence
+    private Coroutine currentLoadCoroutine = null;
 
     // ==================================================
     // Unity Lifecycle
@@ -53,7 +56,7 @@ public class LoadingScreen : MonoBehaviour
         }
 
         Instance = this;
-        //DontDestroyOnLoad(gameObject);
+        DontDestroyOnLoad(gameObject);
 
         ValidateReferences();
         SetupCanvas();
@@ -81,11 +84,31 @@ public class LoadingScreen : MonoBehaviour
             );
         }
 
+        // Debug keys
+        if (debugMode && Input.GetKeyDown(KeyCode.L))
+        {
+            Debug.Log($"===== LoadingScreen State =====");
+            Debug.Log($"IsLoading: {IsLoading}");
+            Debug.Log($"isFading: {isFading}");
+            Debug.Log($"isCompleting: {isCompleting}");
+            Debug.Log($"currentLoadCoroutine: {(currentLoadCoroutine != null ? "Active" : "NULL")}");
+            Debug.Log($"fadeImage.alpha: {fadeImage?.color.a}");
+            Debug.Log($"Canvas order: {fadeCanvas?.sortingOrder}");
+            Debug.Log($"==============================");
+        }
+
         if (debugMode && Input.GetKeyDown(KeyCode.Space))
         {
             float alpha = fadeImage != null ? fadeImage.color.a : -1f;
             int order = fadeCanvas != null ? fadeCanvas.sortingOrder : -999;
             Debug.Log($"🎨 Alpha: {alpha}, IsLoading: {IsLoading}, Canvas Order: {order}");
+        }
+
+        // 🆕 กด R เพื่อ Force Reset
+        if (debugMode && Input.GetKeyDown(KeyCode.R))
+        {
+            Debug.LogWarning("🔧 Manual Force Reset triggered!");
+            ForceReset();
         }
     }
 
@@ -96,24 +119,75 @@ public class LoadingScreen : MonoBehaviour
     {
         DebugLog($"🎬 Scene Loaded: {scene.name}, IsLoading: {IsLoading}");
 
-        if (!IsLoading)
+        // 🆕 ถ้ากำลังทำ CompleteLoadingSequence ห้ามรบกวน!
+        if (isCompleting)
         {
-            if (!isFading)
-                ForceReset();
-        }
-        else
-        {
-            StartCoroutine(CheckAndForceReset(scene.name));
+            DebugLog("⏸️ Completing load sequence, don't interfere");
+            return;
         }
 
+        // Don't interfere if we're actively loading
+        if (IsLoading && currentLoadCoroutine != null)
+        {
+            DebugLog("✅ Active load in progress, letting it finish");
+            return;
+        }
+
+        // If somehow we got stuck, force reset
+        if (IsLoading && currentLoadCoroutine == null)
+        {
+            Debug.LogWarning("⚠️ IsLoading=true but no active coroutine, force resetting");
+            ForceReset();
+        }
     }
 
     // ==================================================
     // Public API
     // ==================================================
+
+    public void ForceResetIfStuck()
+    {
+        if (IsLoading)
+        {
+            Debug.LogWarning("🔧 Force reset called from external script");
+            ForceReset();
+        }
+        else
+        {
+            DebugLog("✅ No need to reset - not loading");
+        }
+    }
+
     public IEnumerator LoadScene(string sceneName)
     {
+        // Timeout protection
+        if (IsLoading)
+        {
+            Debug.LogWarning($"⚠️ Already loading! Waiting for current load to finish or timeout...");
+
+            float waitTime = 0f;
+            while (IsLoading && waitTime < loadingTimeout)
+            {
+                waitTime += Time.unscaledDeltaTime;
+                yield return null;
+            }
+
+            if (IsLoading)
+            {
+                Debug.LogWarning($"⏱️ Loading stuck for {loadingTimeout}s! Force resetting...");
+                ForceReset();
+                yield return new WaitForSecondsRealtime(0.1f);
+            }
+        }
+
         DebugLog($"🚀 Start loading: {sceneName}");
+
+        currentLoadCoroutine = StartCoroutine(LoadSceneInternal(sceneName));
+        yield return currentLoadCoroutine;
+    }
+
+    private IEnumerator LoadSceneInternal(string sceneName)
+    {
         BeginLoading();
 
         // Fade OUT
@@ -126,6 +200,7 @@ public class LoadingScreen : MonoBehaviour
         {
             Debug.LogError($"❌ Cannot load scene: {sceneName}");
             ForceReset();
+            currentLoadCoroutine = null;
             yield break;
         }
 
@@ -137,11 +212,20 @@ public class LoadingScreen : MonoBehaviour
         DebugLog($"📦 Scene '{sceneName}' loaded");
 
         yield return StartCoroutine(CompleteLoadingSequence());
+
+        currentLoadCoroutine = null;
     }
 
 
     public void BeginLoading()
     {
+        // 🆕 ป้องกันเรียกซ้ำ
+        if (IsLoading)
+        {
+            Debug.LogWarning("⚠️ BeginLoading called but already loading!");
+            return;
+        }
+
         IsLoading = true;
 
         if (fadeCanvas != null)
@@ -162,16 +246,18 @@ public class LoadingScreen : MonoBehaviour
     // ==================================================
     private IEnumerator CompleteLoadingSequence()
     {
+        isCompleting = true; // 🆕 ป้องกันถูกรบกวน
         DebugLog("🎬 CompleteLoadingSequence START");
 
         yield return new WaitForEndOfFrame();
         yield return new WaitForSeconds(0.1f);
-        //yield return new WaitForSecondsRealtime(holdBlackAfterLoad);
         yield return new WaitForSecondsRealtime(0.3f);
-
 
         DebugLog("☀️ Fade IN start");
         yield return Fade(1f, 0f, defaultFadeDuration);
+
+        // 🆕 รออีก frame เพื่อให้แน่ใจว่า Fade เสร็จ
+        yield return new WaitForEndOfFrame();
 
         if (fadeCanvas != null)
         {
@@ -187,10 +273,12 @@ public class LoadingScreen : MonoBehaviour
             Color c = fadeImage.color;
             c.a = 0f;
             fadeImage.color = c;
+            DebugLog($"Fade alpha set to: {fadeImage.color.a}");
         }
 
         IsLoading = false;
         isFading = false;
+        isCompleting = false; // 🆕 เสร็จแล้ว
 
         DebugLog("✅ Load Complete");
     }
@@ -241,30 +329,6 @@ public class LoadingScreen : MonoBehaviour
     // ==================================================
     // Safety / Recovery
     // ==================================================
-    private IEnumerator CheckAndForceReset(string sceneName)
-    {
-        DebugLog($"⏳ Waiting for loading... ({sceneName})");
-
-        float timeout = 2f;
-        float elapsed = 0f;
-
-        while (IsLoading && elapsed < timeout)
-        {
-            elapsed += Time.unscaledDeltaTime;
-            yield return null;
-        }
-
-        if (IsLoading)
-        {
-            Debug.LogWarning($"⚠️ IsLoading stuck! Force resetting... ({sceneName})");
-            ForceReset();
-        }
-        else
-        {
-            DebugLog("✅ Loading completed normally");
-        }
-    }
-
     private void ForceReset()
     {
         if (fadeCanvas != null)
@@ -282,6 +346,8 @@ public class LoadingScreen : MonoBehaviour
 
         IsLoading = false;
         isFading = false;
+        isCompleting = false; // 🆕
+        currentLoadCoroutine = null;
 
         DebugLog("🔄 ForceReset complete");
     }

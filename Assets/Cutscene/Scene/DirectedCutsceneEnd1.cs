@@ -57,7 +57,8 @@ public class DirectedCutsceneEnd1 : MonoBehaviour
         PauseController.isPaused = false;
 
         if (LoadingScreen.Instance != null)
-            StartCoroutine(LoadingScreen.Instance.LoadScene(nextScene));
+            //StartCoroutine(LoadingScreen.Instance.LoadScene(nextScene));
+            UnityEngine.SceneManagement.SceneManager.LoadScene(nextScene);
         else
             UnityEngine.SceneManagement.SceneManager.LoadScene(nextScene);
     }
