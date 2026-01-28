@@ -82,9 +82,15 @@ public class SaveSlotUI : MonoBehaviour
     public void NewGame(int slot)
     {
         PlayerPrefs.SetInt("CurrentSlot", slot);
-
         DetectiveBookManager.Instance.ClearAllProgress();
         DetectiveBookManager.Instance.InitAfterSlotSelected();
+
+        //foreach (var key in PlayerPrefs.Keys)
+        //{
+        //    if (key.StartsWith($"HINT_{slot}_"))
+        //        PlayerPrefs.DeleteKey(key);
+        //}
+
 
         SaveManager.Instance.NewGame(slot);
     }

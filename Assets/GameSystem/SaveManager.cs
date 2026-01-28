@@ -46,11 +46,20 @@ public class SaveManager : MonoBehaviour
     {
         DeleteSlot(slot);
 
+        string list = PlayerPrefs.GetString("HINT_KEY_LIST", "");
+        foreach (var key in list.Split('|'))
+        {
+            if (!string.IsNullOrEmpty(key))
+                PlayerPrefs.DeleteKey(key);
+        }
+        PlayerPrefs.DeleteKey("HINT_KEY_LIST");
+
         PlayerPrefs.SetInt("CurrentSlot", slot);
 
         // 🔥 ล้าง Detective Book ทั้งหมด
         PlayerPrefs.DeleteKey($"DetectiveBook_UnlockedNotes_{slot}");
         PlayerPrefs.DeleteKey("Tutorial_Note");
+       
 
         // 🔥 ล้าง dialogue runtime
         DetectiveBookManager.pendingDialogueKeys = null;
