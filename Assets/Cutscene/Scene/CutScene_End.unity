@@ -409,7 +409,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ed0c4174e3311554ba569641e7b5ed92, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CutsceneEnd
-  nextScene: Level1
+  nextScene: Mainmenu
   minPlayTime: 2
   skipCooldown: 0.3
 --- !u!1 &1752984035

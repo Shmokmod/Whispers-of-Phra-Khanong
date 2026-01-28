@@ -455,11 +455,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
---- !u!1 &209462433 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 5709709220839924046, guid: 5b867e06f39986a479fe2d99fe2c0eb4, type: 3}
-  m_PrefabInstance: {fileID: 1471736002}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &383963087
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -553,27 +548,27 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7696777924753604541, guid: 23bba7bcdb0fd0a47971ab9cb83e1be9, type: 3}
       propertyPath: m_LocalScale.x
-      value: 0.09902757
+      value: 0.07539464
       objectReference: {fileID: 0}
     - target: {fileID: 7696777924753604541, guid: 23bba7bcdb0fd0a47971ab9cb83e1be9, type: 3}
       propertyPath: m_LocalScale.y
-      value: 0.24992943
+      value: 0.19028376
       objectReference: {fileID: 0}
     - target: {fileID: 7696777924753604541, guid: 23bba7bcdb0fd0a47971ab9cb83e1be9, type: 3}
       propertyPath: m_LocalScale.z
-      value: 0.1568731
+      value: 0.11943533
       objectReference: {fileID: 0}
     - target: {fileID: 7696777924753604541, guid: 23bba7bcdb0fd0a47971ab9cb83e1be9, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.21213976
+      value: 0.218
       objectReference: {fileID: 0}
     - target: {fileID: 7696777924753604541, guid: 23bba7bcdb0fd0a47971ab9cb83e1be9, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.81830204
+      value: 0.63778
       objectReference: {fileID: 0}
     - target: {fileID: 7696777924753604541, guid: 23bba7bcdb0fd0a47971ab9cb83e1be9, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -0.12964986
+      value: -0.128
       objectReference: {fileID: 0}
     - target: {fileID: 7696777924753604541, guid: 23bba7bcdb0fd0a47971ab9cb83e1be9, type: 3}
       propertyPath: m_LocalRotation.w
@@ -698,8 +693,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.581084, y: 1.1051275, z: 1.2645737}
-  m_Center: {x: 0.20946005, y: 0.05256348, z: -0.13228706}
+  m_Size: {x: 0.36681587, y: 1.1051275, z: 0.7975068}
+  m_Center: {x: 0.20946012, y: 0.05256348, z: -0.13228706}
 --- !u!23 &456571516
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -2114,9 +2109,6 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 281855664364225751, guid: 4f96409ccf7f2d54bac066292257dc1f, type: 3}
       insertIndex: -1
       addedObject: {fileID: 825392365}
-    - targetCorrespondingSourceObject: {fileID: 281855664364225751, guid: 4f96409ccf7f2d54bac066292257dc1f, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1252422467}
     - targetCorrespondingSourceObject: {fileID: -2045257923548263128, guid: 4f96409ccf7f2d54bac066292257dc1f, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1387071395}
@@ -2178,25 +2170,6 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 722215992}
   m_SourcePrefab: {fileID: 100100000, guid: 4f96409ccf7f2d54bac066292257dc1f, type: 3}
---- !u!114 &1252422467
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 825392361}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: accc5a432faf75c45b41dbbc03992b07, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::InteractWithHint
-  hintID: Chest_Opened
-  itemPrefab: {fileID: 0}
-  openSpriteHint: {fileID: 0}
-  GotItemUI: {fileID: 209462433}
-  noteIDsToUnlock:
-  - Chest_Opened
-  evidenceIDsToUnlock: []
 --- !u!1 &1262625695 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -5546747315237514756, guid: 4f96409ccf7f2d54bac066292257dc1f, type: 3}
@@ -2390,7 +2363,7 @@ PrefabInstance:
     - target: {fileID: 808595723342505356, guid: 5b867e06f39986a479fe2d99fe2c0eb4, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 1252422467}
+      objectReference: {fileID: 0}
     - target: {fileID: 808595723342505356, guid: 5b867e06f39986a479fe2d99fe2c0eb4, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
       value: CloseGotitemUI
@@ -2630,7 +2603,7 @@ PrefabInstance:
     - target: {fileID: 8368473477782133580, guid: 5b867e06f39986a479fe2d99fe2c0eb4, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 1252422467}
+      objectReference: {fileID: 456571514}
     - target: {fileID: 8368473477782133580, guid: 5b867e06f39986a479fe2d99fe2c0eb4, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
       value: CloseGotitemUI
