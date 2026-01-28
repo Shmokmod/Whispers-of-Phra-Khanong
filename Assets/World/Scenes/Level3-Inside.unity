@@ -794,12 +794,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: accc5a432faf75c45b41dbbc03992b07, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InteractWithHint
-  hintID: DeatchCost
+  hintID: Table
   itemPrefab: {fileID: 0}
   openSpriteHint: {fileID: 0}
   GotItemUI: {fileID: 0}
   noteIDsToUnlock:
-  - DeatchCost
+  - Table
   evidenceIDsToUnlock: []
 --- !u!65 &249118603
 BoxCollider:
@@ -3398,7 +3398,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3538311732863472308, guid: b4bab845c580d954cb1b9d9d9186d95c, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 25
+      value: 24.04
       objectReference: {fileID: 0}
     - target: {fileID: 3538311732863472308, guid: b4bab845c580d954cb1b9d9d9186d95c, type: 3}
       propertyPath: m_LocalPosition.y
@@ -3406,7 +3406,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3538311732863472308, guid: b4bab845c580d954cb1b9d9d9186d95c, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -3.0071692
+      value: -5.1371694
       objectReference: {fileID: 0}
     - target: {fileID: 3538311732863472308, guid: b4bab845c580d954cb1b9d9d9186d95c, type: 3}
       propertyPath: m_LocalRotation.w
@@ -3646,6 +3646,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 967671646}
     m_Modifications:
+    - target: {fileID: 988876042629453816, guid: 621856fd04c80d241a64f6d7942ce365, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1290092349033234760, guid: 621856fd04c80d241a64f6d7942ce365, type: 3}
       propertyPath: m_IsActive
       value: 0
@@ -3733,6 +3737,10 @@ PrefabInstance:
     - target: {fileID: 7964029010645820213, guid: 621856fd04c80d241a64f6d7942ce365, type: 3}
       propertyPath: m_Name
       value: DialogueUI
+      objectReference: {fileID: 0}
+    - target: {fileID: 8084090717059148144, guid: 621856fd04c80d241a64f6d7942ce365, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -4530,7 +4538,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1158449799279172816, guid: a14f122e7f98519458bb0e135d3c2c11, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 25
+      value: 24.04
       objectReference: {fileID: 0}
     - target: {fileID: 1158449799279172816, guid: a14f122e7f98519458bb0e135d3c2c11, type: 3}
       propertyPath: m_LocalPosition.y
@@ -4538,7 +4546,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1158449799279172816, guid: a14f122e7f98519458bb0e135d3c2c11, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 1.23
+      value: -0.9
       objectReference: {fileID: 0}
     - target: {fileID: 1158449799279172816, guid: a14f122e7f98519458bb0e135d3c2c11, type: 3}
       propertyPath: m_LocalRotation.w
@@ -5878,7 +5886,7 @@ GameObject:
   - component: {fileID: 1087621632}
   - component: {fileID: 1087621635}
   m_Layer: 0
-  m_Name: Hint-Disc
+  m_Name: Hint-DeatchCost
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7625,7 +7633,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1108828627474355990, guid: 2e903d011cc623a4fb5fcf9e7308ad23, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 25
+      value: 24.04
       objectReference: {fileID: 0}
     - target: {fileID: 1108828627474355990, guid: 2e903d011cc623a4fb5fcf9e7308ad23, type: 3}
       propertyPath: m_LocalPosition.y
@@ -7633,7 +7641,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1108828627474355990, guid: 2e903d011cc623a4fb5fcf9e7308ad23, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -3.0071692
+      value: -5.1371694
       objectReference: {fileID: 0}
     - target: {fileID: 1108828627474355990, guid: 2e903d011cc623a4fb5fcf9e7308ad23, type: 3}
       propertyPath: m_LocalRotation.w
@@ -8836,6 +8844,10 @@ PrefabInstance:
     - target: {fileID: 1393839371949879712, guid: 1fdd62e3d14a2334186883821e9525aa, type: 3}
       propertyPath: m_Name
       value: Quest
+      objectReference: {fileID: 0}
+    - target: {fileID: 1393839371949879712, guid: 1fdd62e3d14a2334186883821e9525aa, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5546076583183008569, guid: 1fdd62e3d14a2334186883821e9525aa, type: 3}
       propertyPath: m_Pivot.x
