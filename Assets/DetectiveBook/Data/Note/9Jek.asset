@@ -15,7 +15,7 @@ MonoBehaviour:
   noteID: Jek
   title: "\u0E2D\u0E34\u0E19"
   content: "\u0E2D\u0E34\u0E19"
-  orderIndex: 28
+  orderIndex: 9
   noteImage: {fileID: 0}
   unlockConditions:
   - type: 0
