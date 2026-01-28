@@ -56,7 +56,7 @@ public class LoadingScreen : MonoBehaviour
         }
 
         Instance = this;
-        DontDestroyOnLoad(gameObject);
+        //DontDestroyOnLoad(gameObject);
 
         ValidateReferences();
         SetupCanvas();

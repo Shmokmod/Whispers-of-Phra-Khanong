@@ -91,6 +91,8 @@ public class SaveSlotUI : MonoBehaviour
         //        PlayerPrefs.DeleteKey(key);
         //}
 
+        PlayerPrefs.DeleteKey("StartTutorialShown");
+        PlayerPrefs.DeleteKey("TutorialShown"); // ของ trigger เดิม
 
         SaveManager.Instance.NewGame(slot);
     }
