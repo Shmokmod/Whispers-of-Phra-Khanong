@@ -44,6 +44,12 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/World/Scenes/LV2-NPC.unity
     guid: fd78c5e57496b1a4aaef56359c9464a2
+  - enabled: 1
+    path: Assets/Cutscene/Scene/CutScene_End.unity
+    guid: 2719caeb3bccfd3498824c2c6eef5d6a
+  - enabled: 1
+    path: Assets/Cutscene/Scene/CutScene_Credit.unity
+    guid: 5fdfdd175b5141e45b4ef58b669693e4
   m_configObjects:
     com.unity.input.settings: {fileID: 11400000, guid: 59b9334caa994574691114894a9fe429, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

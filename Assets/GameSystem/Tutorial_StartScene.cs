@@ -3,6 +3,7 @@
 public class Tutorial_StartScene : MonoBehaviour
 {
     public GameObject TutorialUI;
+    public GameObject TutorialUI2;
     private const string StartTutorialKey = "StartTutorialShown";
 
     void Start()
@@ -20,8 +21,14 @@ public class Tutorial_StartScene : MonoBehaviour
         TutorialUI.SetActive(true);
     }
 
-    public void CloseTutorial()
+    public void ShowTutorial2()
     {
         TutorialUI.SetActive(false);
+        TutorialUI2.SetActive(true);
+    }
+
+    public void CloseTutorial()
+    {
+        TutorialUI2.SetActive(false);
     }
 }
