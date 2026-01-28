@@ -21,4 +21,7 @@ MonoBehaviour:
     \u0E44\u0E1B\u0E17\u0E33\u0E44\u0E21\u0E01\u0E31\u0E19\u0E19\u0E30?"
   orderIndex: 7
   noteImage: {fileID: 21300000, guid: f7ab9da56ebda5a4690d98be69dcbe75, type: 3}
-  unlockConditions: []
+  unlockConditions:
+  - type: 4
+    targetID: Hint-Money
+    dialogueIndex: 0
