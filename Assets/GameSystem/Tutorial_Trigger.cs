@@ -3,6 +3,8 @@
 public class Tutorial_Trigger : MonoBehaviour
 {
     public GameObject TutorialUI;
+    public GameObject TutorialUI2;
+    
     private const string TutorialKey = "TutorialShown";
 
     private void OnTriggerEnter(Collider other)
@@ -23,9 +25,17 @@ public class Tutorial_Trigger : MonoBehaviour
         Time.timeScale = 0f; // Pause the game
     }
 
-    public void CloseTutorial()
+
+
+    public void NextTutorial()
     {
         TutorialUI.SetActive(false);
+        TutorialUI2.SetActive(true);
+    }
+
+    public void CloseTutorial()
+    {
+        TutorialUI2.SetActive(false);
         Time.timeScale = 1f; // Resume the game
     }
 }

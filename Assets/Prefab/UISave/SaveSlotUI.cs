@@ -82,20 +82,30 @@ public class SaveSlotUI : MonoBehaviour
     public void NewGame(int slot)
     {
         PlayerPrefs.SetInt("CurrentSlot", slot);
+
         DetectiveBookManager.Instance.ClearAllProgress();
         DetectiveBookManager.Instance.InitAfterSlotSelected();
 
-        //foreach (var key in PlayerPrefs.Keys)
-        //{
-        //    if (key.StartsWith($"HINT_{slot}_"))
-        //        PlayerPrefs.DeleteKey(key);
-        //}
-
+        // reset tutorial
         PlayerPrefs.DeleteKey("StartTutorialShown");
-        PlayerPrefs.DeleteKey("TutorialShown"); // ของ trigger เดิม
+        PlayerPrefs.DeleteKey("TutorialShown");
+
+        // reset hint (ถ้าใช้ key list)
+        string listKey = "HINT_KEY_LIST";
+        string list = PlayerPrefs.GetString(listKey, "");
+
+        foreach (string key in list.Split('|'))
+        {
+            if (!string.IsNullOrEmpty(key) && key.StartsWith($"HINT_{slot}_"))
+                PlayerPrefs.DeleteKey(key);
+        }
+
+        PlayerPrefs.DeleteKey(listKey);
+        PlayerPrefs.Save();
 
         SaveManager.Instance.NewGame(slot);
     }
+
 
     public void ContinueGame(int slot)
     {
